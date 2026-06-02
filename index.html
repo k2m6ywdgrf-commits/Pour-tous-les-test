@@ -1436,6 +1436,116 @@ function init() {
   calculerEtAfficherAccueilGlobal();
 }
 init();
+// 1. Fonction robuste pour parser le CSV en gérant les retours à la ligne entre guillemets
+function parseCSV(text) {
+    const lines = [];
+    let currentLine = [];
+    let currentCell = '';
+    let inQuotes = false;
+
+    for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+        const nextChar = text[i + 1];
+
+        if (char === '"') {
+            // Gère les doubles guillemets échappés ""
+            if (inQuotes && nextChar === '"') {
+                currentCell += '"';
+                i++; // Saute le deuxième guillemet
+            } else {
+                // Bascule l'état (on entre ou on sort des guillemets)
+                inQuotes = !inQuotes;
+            }
+        } else if (char === ',' && !inQuotes) {
+            // Fin d'une cellule (séparateur virgule hors guillemets)
+            currentLine.push(currentCell.trim());
+            currentCell = '';
+        } else if ((char === '\r' || char === '\n') && !inQuotes) {
+            // Fin d'une vraie ligne standard (hors guillemets)
+            if (char === '\r' && nextChar === '\n') {
+                i++; // Gère les fins de ligne Windows (\r\n)
+            }
+            currentLine.push(currentCell.trim());
+            
+            // On ajoute la ligne si elle n'est pas vide
+            if (currentLine.length > 1 || currentLine[0] !== '') {
+                lines.push(currentLine);
+            }
+            currentLine = [];
+            currentCell = '';
+        } else {
+            // Ajoute le caractère (y compris les sauts de ligne internes aux cellules)
+            currentCell += char;
+        }
+    }
+    
+    // Ajoute la toute dernière ligne si le fichier ne se termine pas par un retour à la ligne
+    if (currentCell || currentLine.length > 0) {
+        currentLine.push(currentCell.trim());
+        lines.push(currentLine);
+    }
+
+    return lines;
+}
+
+// 2. Fonction principale déclenchée lors de la sélection du fichier de la banque
+function handleFileSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    
+    reader.onload = function(e) {
+        const csvContent = e.target.result;
+        
+        // Appel du parseur sécurisé
+        const rows = parseCSV(csvContent);
+        
+        if (rows.length === 0) {
+            console.error("Le fichier est vide ou n'a pas pu être lu.");
+            return;
+        }
+
+        // Récupération des entêtes (première ligne : "datetime", "date", etc.)
+        const headers = rows[0];
+        
+        // Récupération des lignes de données (toutes les lignes après les entêtes)
+        const dataRows = rows.slice(1);
+
+        // Optionnel : Transformation en un tableau d'objets JSON [ { datetime: "...", date: "..." }, ... ]
+        // C'est généralement plus pratique pour manipuler vos données dans votre dashboard
+        const transactions = dataRows.map(row => {
+            let t = {};
+            headers.forEach((header, index) => {
+                // On nettoie les éventuels guillemets restants autour du nom des colonnes
+                const cleanHeader = header.replace(/^"|"$/g, '');
+                t[cleanHeader] = row[index] ? row[index].replace(/^"|"$/g, '') : '';
+            });
+            return t;
+        });
+
+        // --- TOUT EST PRÊT ICI ---
+        console.log("Transactions parsées avec succès :", transactions);
+        
+        // C'est ici que vous connectez vos données à votre logique de application :
+        // Exemple : remplirVotreRegistre(transactions);
+        // Exemple : calculerRentabilite(transactions);
+    };
+
+    reader.readAsText(file);
+}
+
+// 3. Liaison de la fonction avec votre élément HTML <input type="file" id="bank-file">
+// (Assurez-vous que l'id correspond bien à votre balise input dans le HTML)
+document.addEventListener('DOMContentLoaded', () => {
+    const fileInput = document.getElementById('bank-file'); // Remplacez 'bank-file' par votre ID si nécessaire
+    if (fileInput) {
+        fileInput.addEventListener('change', handleFileSelect);
+    }
+});
+
+
+  
 </script>
 </body>
 </html>
