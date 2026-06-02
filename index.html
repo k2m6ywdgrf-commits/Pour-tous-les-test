@@ -128,7 +128,7 @@ button:active{transform:scale(0.97);opacity:0.9;}
 .perf-up { background: rgba(16, 185, 129, 0.15); color: var(--eu); }
 .perf-down { background: rgba(244, 63, 94, 0.15); color: var(--red); }
 
-/* NOUVEAU STYLE POUR L'IMPORT BANCAIRE CSV */
+/* STYLE POUR L'IMPORT BANCAIRE CSV */
 .import-zone {
   border: 2px dashed rgba(168, 85, 247, 0.25); background: rgba(168, 85, 247, 0.02);
   padding: 20px; border-radius: 14px; text-align: center; margin-bottom: 14px; cursor: pointer; transition: all 0.2s;
@@ -541,16 +541,54 @@ function showSubTab(univ, section) {
   }
 }
 
-/* INTERPRETEUR INTELLIGENT DE BANQUE (CSV) */
+/* INTERPRETEUR INTELLIGENT ET SÉCURISÉ DE CSV BANCAIRE */
 function importBanqueCSV(input) {
   if (!input.files || !input.files[0]) return;
   var reader = new FileReader();
   reader.onload = function(e) {
     var text = e.target.result;
-    var lines = text.split(/\r?\n/);
+    
+    // Parseur sécurisé gérant les retours à la ligne entre guillemets
+    var lines = [];
+    let currentLine = [];
+    let currentCell = '';
+    let inQuotes = false;
+
+    for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+        const nextChar = text[i + 1];
+
+        if (char === '"') {
+            if (inQuotes && nextChar === '"') {
+                currentCell += '"';
+                i++; 
+            } else {
+                inQuotes = !inQuotes;
+            }
+        } else if (char === ',' && !inQuotes) {
+            currentLine.push(currentCell.trim());
+            currentCell = '';
+        } else if ((char === '\r' || char === '\n') && !inQuotes) {
+            if (char === '\r' && nextChar === '\n') { i++; }
+            currentLine.push(currentCell.trim());
+            if (currentLine.length > 1 || currentLine[0] !== '') {
+                lines.push(currentLine);
+            }
+            currentLine = [];
+            currentCell = '';
+        } else {
+            currentCell += char;
+        }
+    }
+    if (currentCell || currentLine.length > 0) {
+        currentLine.push(currentCell.trim());
+        lines.push(currentLine);
+    }
+
     if(lines.length < 2) return;
     
-    var header = lines[0].replace(/"/g, '').split(',');
+    // Nettoyage complet des en-têtes
+    var header = lines[0].map(h => h.replace(/^"|"$/g, '').trim());
     var idxDate = header.indexOf('date');
     var idxType = header.indexOf('type');
     var idxName = header.indexOf('name');
@@ -563,28 +601,24 @@ function importBanqueCSV(input) {
     var countPea = 0, countCto = 0;
 
     for (var i = 1; i < lines.length; i++) {
-      if (!lines[i].trim()) continue;
-      // Nettoyage propre des valeurs CSV prenant en compte les guillemets
-      var cells = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || lines[i].split(',');
-      cells = cells.map(c => c.replace(/^"|"$/g, '').trim());
+      var cells = lines[i];
+      if (cells.length < header.length) continue;
 
-      if(cells.length < header.length) continue;
-
-      var bDate = cells[idxDate];
-      var bType = cells[idxType];
-      var bName = cells[idxName] || "";
+      var bDate = cells[idxDate] ? cells[idxDate].replace(/^"|"$/g, '').trim() : '';
+      var bType = cells[idxType] ? cells[idxType].replace(/^"|"$/g, '').trim() : '';
+      var bName = cells[idxName] ? cells[idxName].replace(/^"|"$/g, '').trim() : "";
       var bShares = Math.abs(parseFloat(cells[idxShares])) || 0;
       var bPrice = parseFloat(cells[idxPrice]) || 0;
       var bAmount = Math.abs(parseFloat(cells[idxAmount])) || 0;
       var bFee = Math.abs(parseFloat(cells[idxFee])) || 0;
       var bTax = Math.abs(parseFloat(cells[idxTax])) || 0;
 
+      if (!bDate) continue;
       var formattedDate = formatDateToFR(bDate);
 
-      // Regroupement automatique : Est-ce un ETF PEA existant dans tes configurations ?
       var cleanNameLower = bName.toLowerCase();
       var targetTag = "";
-      if (cleanNameLower.includes("s&p 500") || cleanNameLower.includes("nvidia") === false && cleanNameLower.includes("usa")) {
+      if (cleanNameLower.includes("s&p 500") || (cleanNameLower.includes("nvidia") === false && cleanNameLower.includes("usa"))) {
         targetTag = "usa";
       } else if (cleanNameLower.includes("stoxx 600") || cleanNameLower.includes("europe 600") || cleanNameLower.includes("eu")) {
         targetTag = "eu";
@@ -592,9 +626,7 @@ function importBanqueCSV(input) {
         targetTag = "em";
       }
 
-      // DISPATCHER VERS REPERTOIRE COHÉRENT
       if (targetTag !== "" && (bType === "BUY" || bType === "SELL" || bType === "INTEREST_PAYMENT" || bType === "DIVIDEND")) {
-        // Ajout au PEA
         var opType = (bType === "BUY") ? "achat" : (bType === "SELL" ? "vente" : "dividende");
         var etfNames = {usa: 'Amundi S&P 500', eu: 'BNP Stoxx 600', em: 'Amundi Émergents'};
         
@@ -604,11 +636,10 @@ function importBanqueCSV(input) {
             id: generateId(), type: opType, date: formattedDate, etf: etfNames[targetTag], tag: targetTag,
             nb: bShares, prix: bPrice, frais: bFee, total: bAmount.toFixed(2)
           });
-          if(bPrice > 0) appData.pea.prix[targetTag] = bPrice; // Synchro dynamique du cours
+          if(bPrice > 0) appData.pea.prix[targetTag] = bPrice; 
           countPea++;
         }
       } else if (bName !== "") {
-        // Tout le reste va au CTO (Stock picking ou Intérêts de livrets attachés)
         var opTypeCto = "achat";
         if(bType === "SELL") opTypeCto = "vente";
         if(bType === "INTEREST_PAYMENT" || bType === "DIVIDEND") opTypeCto = "dividende";
@@ -826,16 +857,14 @@ function renderGlobalTrendChartCurve() {
   container.innerHTML = html;
 }
 
-/* NOUVEAU GRAPHIQUE HISTOGRAMME DES RENTES (SVG) */
 function renderRenteMensuelleChart() {
   var target = document.getElementById('monthly-dividend-chart-wrapper');
   if(!target) return;
 
   var periodicData = {};
-  // Extraire les dividendes du PEA et CTO
   appData.pea.historique.forEach(m => {
     if(m.type === 'dividende') {
-      var k = m.date.substring(3,10); // Format MM/AAAA
+      var k = m.date.substring(3,10); 
       periodicData[k] = (periodicData[k] || 0) + parseFloat(m.total);
     }
   });
@@ -878,7 +907,6 @@ function renderRenteMensuelleChart() {
   target.innerHTML = svgContent;
 }
 
-/* NOUVEAU GRAPHIQUE BARRES CTO PONDÉRATION VISUELLE */
 function renderCtoWeightChart(positions) {
   var container = document.getElementById('cto-weight-chart-container');
   if(!container) return;
@@ -1364,7 +1392,6 @@ function renderCTOUniverseOnly() {
       '<div class="sim-row" style="border-top:1px dashed rgba(255,255,255,0.1); margin-top:6px; padding-top:6px;"><span>💰 <b>Valeur Brute après flat tax :</b></span> <b style="color:var(--eu);">'+netApresFlatTax.toFixed(2)+' €</b></div>' +
     '</div>';
 
-    // Rendre le sous-graphique de répartition CTO de manière synchrone
     renderCtoWeightChart(positions);
 }
 
@@ -1436,116 +1463,6 @@ function init() {
   calculerEtAfficherAccueilGlobal();
 }
 init();
-// 1. Fonction robuste pour parser le CSV en gérant les retours à la ligne entre guillemets
-function parseCSV(text) {
-    const lines = [];
-    let currentLine = [];
-    let currentCell = '';
-    let inQuotes = false;
-
-    for (let i = 0; i < text.length; i++) {
-        const char = text[i];
-        const nextChar = text[i + 1];
-
-        if (char === '"') {
-            // Gère les doubles guillemets échappés ""
-            if (inQuotes && nextChar === '"') {
-                currentCell += '"';
-                i++; // Saute le deuxième guillemet
-            } else {
-                // Bascule l'état (on entre ou on sort des guillemets)
-                inQuotes = !inQuotes;
-            }
-        } else if (char === ',' && !inQuotes) {
-            // Fin d'une cellule (séparateur virgule hors guillemets)
-            currentLine.push(currentCell.trim());
-            currentCell = '';
-        } else if ((char === '\r' || char === '\n') && !inQuotes) {
-            // Fin d'une vraie ligne standard (hors guillemets)
-            if (char === '\r' && nextChar === '\n') {
-                i++; // Gère les fins de ligne Windows (\r\n)
-            }
-            currentLine.push(currentCell.trim());
-            
-            // On ajoute la ligne si elle n'est pas vide
-            if (currentLine.length > 1 || currentLine[0] !== '') {
-                lines.push(currentLine);
-            }
-            currentLine = [];
-            currentCell = '';
-        } else {
-            // Ajoute le caractère (y compris les sauts de ligne internes aux cellules)
-            currentCell += char;
-        }
-    }
-    
-    // Ajoute la toute dernière ligne si le fichier ne se termine pas par un retour à la ligne
-    if (currentCell || currentLine.length > 0) {
-        currentLine.push(currentCell.trim());
-        lines.push(currentLine);
-    }
-
-    return lines;
-}
-
-// 2. Fonction principale déclenchée lors de la sélection du fichier de la banque
-function handleFileSelect(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    
-    reader.onload = function(e) {
-        const csvContent = e.target.result;
-        
-        // Appel du parseur sécurisé
-        const rows = parseCSV(csvContent);
-        
-        if (rows.length === 0) {
-            console.error("Le fichier est vide ou n'a pas pu être lu.");
-            return;
-        }
-
-        // Récupération des entêtes (première ligne : "datetime", "date", etc.)
-        const headers = rows[0];
-        
-        // Récupération des lignes de données (toutes les lignes après les entêtes)
-        const dataRows = rows.slice(1);
-
-        // Optionnel : Transformation en un tableau d'objets JSON [ { datetime: "...", date: "..." }, ... ]
-        // C'est généralement plus pratique pour manipuler vos données dans votre dashboard
-        const transactions = dataRows.map(row => {
-            let t = {};
-            headers.forEach((header, index) => {
-                // On nettoie les éventuels guillemets restants autour du nom des colonnes
-                const cleanHeader = header.replace(/^"|"$/g, '');
-                t[cleanHeader] = row[index] ? row[index].replace(/^"|"$/g, '') : '';
-            });
-            return t;
-        });
-
-        // --- TOUT EST PRÊT ICI ---
-        console.log("Transactions parsées avec succès :", transactions);
-        
-        // C'est ici que vous connectez vos données à votre logique de application :
-        // Exemple : remplirVotreRegistre(transactions);
-        // Exemple : calculerRentabilite(transactions);
-    };
-
-    reader.readAsText(file);
-}
-
-// 3. Liaison de la fonction avec votre élément HTML <input type="file" id="bank-file">
-// (Assurez-vous que l'id correspond bien à votre balise input dans le HTML)
-document.addEventListener('DOMContentLoaded', () => {
-    const fileInput = document.getElementById('bank-file'); // Remplacez 'bank-file' par votre ID si nécessaire
-    if (fileInput) {
-        fileInput.addEventListener('change', handleFileSelect);
-    }
-});
-
-
-  
 </script>
 </body>
 </html>
