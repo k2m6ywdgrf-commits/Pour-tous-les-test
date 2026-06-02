@@ -1,246 +1,204 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Importation de Transactions - Portfolio</title>
-    <style>
-        /* Style Global - Mode Sombre Basique */
-        body {
-            background-color: #0b0f19;
-            color: #f3f4f6;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
-        }
-
-        /* Interface Style Liquid Glass (Glassmorphism) */
-        .glass-container {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 16px;
-            padding: 30px;
-            width: 100%;
-            max-width: 500px;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-            text-align: center;
-            box-sizing: border-box;
-        }
-
-        h2 {
-            margin-top: 0;
-            font-weight: 600;
-            letter-spacing: -0.5px;
-            background: linear-gradient(135deg, #ffffff 0%, #a1a1aa 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        p {
-            color: #9ca3af;
-            font-size: 14px;
-            margin-bottom: 25px;
-        }
-
-        /* Input File Masqué et Bouton Personnalisé */
-        .file-input-wrapper {
-            position: relative;
-            margin-bottom: 20px;
-        }
-
-        input[type="file"] {
-            position: absolute;
-            left: 0;
-            top: 0;
-            opacity: 0;
-            width: 100%;
-            height: 100%;
-            cursor: pointer;
-        }
-
-        .custom-file-btn {
-            display: block;
-            background: rgba(255, 255, 255, 0.07);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            color: #ffffff;
-            padding: 12px 20px;
-            border-radius: 8px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-
-        input[type="file"]:hover + .custom-file-btn {
-            background: rgba(255, 255, 255, 0.12);
-            border-color: rgba(255, 255, 255, 0.25);
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.05);
-        }
-
-        /* Zone de Status / Console de Débogage */
-        #statusLog {
-            margin-top: 15px;
-            font-size: 13px;
-            padding: 12px;
-            border-radius: 8px;
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            text-align: left;
-            max-height: 150px;
-            overflow-y: auto;
-            white-space: pre-line;
-            color: #a7f3d0; /* Vert clair par défaut pour le succès */
-        }
-        
-        .error-log {
-            color: #fca5a5 !important; /* Rouge si erreur */
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Mon Patrimoine">
+<title>Mon Assistant Patrimoine Global</title>
+<style>
+:root { --bg: #000000; --glass: rgba(22, 28, 45, 0.65); --glass-border: rgba(255, 255, 255, 0.08); --input: rgba(30, 41, 59, 0.7); --text: #f3f4f6; --text-muted: #94a3b8; --usa: #0ea5e9; --eu: #10b981; --em: #f59e0b; --div: #a855f7; --red: #f43f5e; --gold: #fbbf24; }
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 16px; font-size: 15px; background-image: radial-gradient(circle at 50% -20%, #1e1b4b 0%, #000000 70%); background-attachment: fixed; }
+.card{ background: var(--glass); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); padding: 18px; border-radius: 16px; margin-bottom: 14px; border: 1px solid var(--glass-border); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37); }
+h2{margin:0 0 14px;font-size:13px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:1px;}
+input, select{ padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.05); background:var(--input);color:white;font-size:15px;width:100%;transition:all 0.2s; }
+input:focus, select:focus{background:rgba(30,41,59,0.9);outline:none;border-color:var(--usa);}
+.row{display:flex;gap:10px;margin-bottom:10px;align-items:center;}
+.row label{width:110px;min-width:110px;font-size:13px;color:var(--text-muted);font-weight:500;}
+.row input, .row select{flex:1;}
+button{ width:100%;padding:14px;border:none;border-radius:12px;font-weight:600;font-size:15px;cursor:pointer; transition:transform 0.1s, opacity 0.2s; }
+button:active{transform:scale(0.97);opacity:0.9;}
+.btn-blue{background: linear-gradient(135deg, #0ea5e9, #0284c7); color:white;}
+.btn-green{background: linear-gradient(135deg, #10b981, #059669); color:white;}
+.btn-purple{background: linear-gradient(135deg, #a855f7, #7c3aed); color:white;}
+.btn-red{background: linear-gradient(135deg, #f43f5e, #e11d48); color:white;}
+.btn-gray{background: rgba(255,255,255,0.08); color:var(--text); font-size:13px; padding:10px;}
+.main-nav-container { display: flex; flex-direction: column; gap: 6px; margin-bottom: 20px; }
+.main-nav-row { display: flex; gap: 6px; width: 100%; }
+.btn-nav-main { flex: 1; padding: 14px 4px; border-radius: 12px; font-size: 13px; font-weight: 700; background: rgba(255,255,255,0.02); color: var(--text-muted); border: 1px solid var(--glass-border); }
+.btn-nav-main.active { background: linear-gradient(135deg, #1e1b4b, #312e81); color: white; border-color: #4338ca; box-shadow: 0 0 12px rgba(99, 102, 241, 0.3); }
+.tabs{ display:flex;gap:4px;margin-bottom:18px;background:rgba(255,255,255,0.04); padding:4px;border-radius:12px;border:1px solid rgba(255,255,255,0.02); }
+.tab{ flex:1;padding:10px 2px;border:none;border-radius:8px;background:transparent; color:var(--text-muted);font-size:13px;cursor:pointer;font-weight:500;transition:all 0.2s; }
+.tab.active{background:rgba(255,255,255,0.12);color:white;font-weight:600;backdrop-filter:blur(5px);}
+.section{display:none;}.section.active{display:block;}
+.universe-block{display:none;}
+.tag{display:inline-block;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:700;text-transform: uppercase;}
+.tag-usa{background:rgba(14,165,233,0.15);color:var(--usa);}
+.tag-eu{background:rgba(16,185,129,0.15);color:var(--eu);}
+.tag-em{background:rgba(245,158,11,0.15);color:var(--em);}
+.tag-div{background:rgba(168,85,247,0.15);color:var(--div);}
+.tag-red{background:rgba(244,63,94,0.15);color:var(--red);}
+.tag-cto{background:rgba(255,255,255,0.08);color:#e2e8f0;border:1px solid rgba(255,255,255,0.05);}
+.bar-container{background:rgba(255,255,255,0.05);border-radius:9px;height:12px;overflow:hidden;display:flex;margin:10px 0;}
+.bar{height:100%;transition:width 0.5s ease-out;}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.stat-box{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.02);border-radius:12px;padding:14px;text-align:center;}
+.stat-val{font-size:18px;font-weight:700;margin-top:4px;letter-spacing:-0.5px;}
+.stat-lbl{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;line-height:1.3;}
+.fees-container-badge { display: inline-block; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); padding: 4px 10px; border-radius: 8px; font-size: 11px; color: var(--text-muted); margin-top: 6px; }
+.hist-item{ background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.03); border-radius:12px;padding:12px;margin-bottom:8px;font-size:13px; display:flex; justify-content:space-between; align-items:center; gap:10px; }
+.hist-content { flex: 1; }
+.btn-delete-item { background: transparent; color: var(--red); width: auto; padding: 6px 10px; font-size: 14px; border-radius: 6px; border: 1px solid rgba(244,63,94,0.2); }
+.sim-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:13px;}
+.divider{border:none;border-top:1px solid rgba(255,255,255,0.08);margin:14px 0;}
+.donut-wrapper { display: flex; flex-direction: column; align-items: center; margin: 15px 0; gap: 16px; }
+@media(min-width: 420px) { .donut-wrapper { flex-direction: row; justify-content: center; gap: 24px; } }
+.donut { width: 100px; height: 100px; min-width: 100px; border-radius: 50%; background: conic-gradient(var(--usa) 0%, var(--usa) var(--u-deg), var(--eu) var(--u-deg), var(--eu) var(--e-deg), var(--em) var(--e-deg), var(--em) 100%); position: relative; }
+.donut::before { content: ""; position: absolute; top: 16px; left: 16px; width: 68px; height: 68px; background: #0f1322; border-radius: 50%; }
+.donut-legends { font-size: 12px; display: flex; flex-direction: column; gap: 8px; flex: 1; width: 100%; }
+.donut-legend-item { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02); padding: 6px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.03); }
+.donut-legend-left { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+.donut-legend-right { display: flex; flex-direction: column; align-items: flex-end; font-family: monospace; font-size: 11px; color: var(--text-muted); }
+.donut-legend-right b { color: var(--text); font-size: 12px; }
+.donut-dot { width: 10px; height: 10px; border-radius: 50%; }
+.cto-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+.cto-table th { text-align: left; color: var(--text-muted); font-size: 11px; padding: 8px; text-transform: uppercase; }
+.cto-table td { padding: 10px 8px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.trend-chart-wrapper { position: relative; width: 100%; height: 150px; margin: 15px 0 5px; background: rgba(255,255,255,0.01); border-radius: 8px; border: 1px solid rgba(255,255,255,0.03); }
+.trend-svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.chart-interactive-zone { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: space-between; }
+.chart-node-col { flex: 1; height: 100%; position: relative; display: flex; justify-content: center; cursor: pointer; }
+.chart-node-col:hover .chart-tooltip-v2 { display: block; }
+.chart-node-col:hover::before { content: ""; position: absolute; top: 0; bottom: 0; width: 1px; background: rgba(255,255,255,0.15); pointer-events: none; }
+.chart-tooltip-v2 { display: none; position: absolute; bottom: 105%; background: #1e293b; color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 11px; white-space: nowrap; border: 1px solid rgba(255,255,255,0.12); z-index: 50; box-shadow: 0 4px 20px rgba(0,0,0,0.6); font-weight: 500; text-align: left; line-height: 1.4; }
+.chart-timeline-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--text-muted); padding: 0 4px; margin-top: 4px; }
+.widget-title { font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px; margin-bottom: 10px; color: white;}
+.widget-perf { font-size: 12px; font-weight: 600; padding: 4px 8px; border-radius: 6px; float: right; margin-top: -2px;}
+.perf-up { background: rgba(16, 185, 129, 0.15); color: var(--eu); }
+.perf-down { background: rgba(244, 63, 94, 0.15); color: var(--red); }
+.import-zone { border: 2px dashed rgba(168, 85, 247, 0.25); background: rgba(168, 85, 247, 0.02); padding: 20px; border-radius: 14px; text-align: center; margin-bottom: 14px; cursor: pointer; transition: all 0.2s; }
+.import-zone:hover { background: rgba(168, 85, 247, 0.06); border-color: var(--div); }
+</style>
 </head>
 <body>
 
-    <div class="glass-container">
-        <h2>Importation de transactions</h2>
-        <p>Sélectionnez votre fichier exporté au format CSV pour alimenter vos registres PEA et CTO automatiquement.</p>
-        
-        <div class="file-input-wrapper">
-            <input type="file" id="csvFileInput" accept=".csv">
-            <div class="custom-file-btn" id="btnText">Choisir un fichier .csv</div>
-        </div>
-
-        <div id="statusLog" style="display: none;"></div>
+<div class="main-nav-container">
+    <div class="main-nav-row">
+        <button class="btn-nav-main active" onclick="switchMain('pea')">PEA</button>
+        <button class="btn-nav-main" onclick="switchMain('cto')">CTO</button>
+        <button class="btn-nav-main" onclick="switchMain('settings')">Réglages</button>
     </div>
+</div>
 
-    <script>
-        document.getElementById('csvFileInput').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
+<div id="pea-section" class="section active">
+    <div class="card">
+        <div class="widget-title">Performance PEA</div>
+        <div id="pea-stats" class="stat-grid"></div>
+        <div class="donut-wrapper" id="pea-donut"></div>
+    </div>
+    <div class="card">
+        <h2>Historique PEA</h2>
+        <div id="pea-history"></div>
+    </div>
+</div>
 
-            // Mise à jour visuelle du bouton
-            document.getElementById('btnText').textContent = file.name;
+<div id="cto-section" class="section">
+    <div class="card">
+        <div class="widget-title">Portefeuille CTO</div>
+        <div id="cto-history"></div>
+    </div>
+</div>
+
+<div id="settings-section" class="section">
+    <div class="card">
+        <h2>Importer des données</h2>
+        <div class="import-zone" onclick="document.getElementById('fileInput').click()">
+            <p>Cliquez ici pour importer votre fichier CSV</p>
+            <input type="file" id="fileInput" style="display:none" onchange="importBanqueCSV(this)" accept=".csv">
+        </div>
+    </div>
+    <div class="card">
+        <h2>Gestion</h2>
+        <button class="btn-red" onclick="if(confirm('Tout effacer ?')) { localStorage.clear(); location.reload(); }">Réinitialiser tout</button>
+    </div>
+</div>
+
+<!-- Scripts -->
+<<script>
+// --- CONFIGURATION & DONNÉES ---
+let appData = JSON.parse(localStorage.getItem("patrimoine_multi_v6")) || {
+    pea: { historique: [], settings: { budget: 10000, frais_courtage: 0.5 } },
+    cto: { historique: [], settings: { tax_rate: 30 } }
+};
+
+function saveData() { localStorage.setItem("patrimoine_multi_v6", JSON.stringify(appData)); }
+function clean(val) { return val ? val.toString().replace(/["\s]/g, '').trim() : "0"; }
+function generateId() { return '_' + Math.random().toString(36).substr(2, 9); }
+
+// --- MOTEUR D'IMPORT CSV ---
+function importBanqueCSV(input) {
+    if (!input.files || !input.files[0]) return;
+    let reader = new FileReader();
+    reader.onload = function(e) {
+        let lines = e.target.result.split('\n');
+        let header = lines[0].toLowerCase().split(',').map(h => h.trim());
+        let idx = { date: header.indexOf('date'), type: header.indexOf('type'), name: header.indexOf('name'), shares: header.indexOf('shares'), price: header.indexOf('price'), amount: header.indexOf('amount'), fee: header.indexOf('fee'), acc: header.indexOf('account_type') };
+
+        for (let i = 1; i < lines.length; i++) {
+            let cells = lines[i].split(',');
+            if (cells.length < header.length) continue;
+            let b = { date: cells[idx.date], type: clean(cells[idx.type]).toUpperCase(), name: cells[idx.name], amount: parseFloat(clean(cells[idx.amount])) || 0, acc: clean(cells[idx.acc]).toUpperCase() };
             
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                const text = event.target.result;
-                try {
-                    // Lancement du parsing robuste
-                    const transactions = parseTransactionCSV(text);
-                    
-                    if (transactions.length === 0) {
-                        throw new Error("Aucune transaction valide trouvée ou en-têtes incorrects.");
-                    }
-
-                    // Séparation des données pour vos tableaux spécifiques
-                    const peaTransactions = transactions.filter(t => t.accountType === 'PEA');
-                    const ctoTransactions = transactions.filter(t => t.accountType === 'DEFAULT'); // DEFAULT correspond au CTO
-
-                    // Affichage du résultat du traitement
-                    showStatus(
-                        `✅ Importation réussie !\n` +
-                        `• Total traité : ${transactions.length} lignes.\n` +
-                        `• Compte PEA : ${peaTransactions.length} transactions chargées.\n` +
-                        `• Compte CTO : ${ctoTransactions.length} transactions chargées.`, 
-                        false
-                    );
-
-                    // --- INTEGRATION DANS VOTRE APPLICATION ---
-                    // C'est ici que vous connectez les données à vos fonctions globales existantes :
-                    // Exemple : 
-                    // monApplication.sauvegarderDansLeRegistre(transactions);
-                    // monApplication.mettreAJourLesTableauxVisuals();
-                    console.log("Données complètes prêtes :", transactions);
-                    console.log("Lignes PEA :", peaTransactions);
-                    console.log("Lignes CTO :", ctoTransactions);
-
-                } catch (error) {
-                    showStatus(`❌ Erreur lors de la lecture : ${error.message}`, true);
-                }
-            };
-
-            reader.readAsText(file, 'UTF-8');
-        });
-
-        /**
-         * Analyse le texte brut du CSV en nettoyant les guillemets et en extrayant les types de données
-         */
-        function parseTransactionCSV(csvText) {
-            // Séparation stricte par ligne
-            const lines = csvText.split(/\r?\n/);
-            if (lines.length < 2) return [];
-
-            // Nettoyage complet de la ligne d'en-tête (on enlève les guillemets résiduels et les espaces)
-            const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim());
-            
-            const dataResult = [];
-
-            // RegEx puissante pour découper selon les virgules tout en ignorant celles à l'intérieur des guillemets
-            // Exemple : "Buy trade FR0011... , quantity: 3" reste un bloc uni.
-            const csvFieldRegEx = /"([^"]*)"|([^,]+)/g;
-
-            for (let i = 1; i < lines.length; i++) {
-                const line = lines[i].trim();
-                if (!line) continue; // Ignore les sauts de ligne vides à la fin du fichier
-
-                const values = [];
-                let match;
-                
-                // On applique la RegEx sur la ligne courante
-                while ((match = csvFieldRegEx.exec(line)) !== null) {
-                    // match[1] contient le texte si entre guillemets, match[2] si sans guillemets
-                    values.push(match[1] !== undefined ? match[1].trim() : match[2].trim());
-                }
-
-                // Création d'un dictionnaire temporaire clé-valeur basé sur les Headers originaux
-                const rowData = {};
-                headers.forEach((header, index) => {
-                    rowData[header] = values[index] || "";
-                });
-
-                // Normalisation et formatage objet pour l'application
-                const transaction = {
-                    id: rowData['transaction_id'],
-                    datetime: rowData['datetime'],
-                    date: rowData['date'],                     // Format texte YYYY-MM-DD
-                    accountType: rowData['account_type'],       // "PEA" ou "DEFAULT"
-                    category: rowData['category'],             // "TRADING" ou "CASH"
-                    type: rowData['type'],                     // "BUY", "SELL", "DIVIDEND", "TRANSFER_IN"...
-                    assetClass: rowData['asset_class'],
-                    name: rowData['name'],                     // "NVIDIA", "Apple", "PEA S&P 500 EUR (Acc)"
-                    symbol: rowData['symbol'],                 // Code ISIN
-                    
-                    // Conversion numérique sécurisée (si vide ou corrompu, retourne 0)
-                    shares: parseFloat(rowData['shares']) || 0,
-                    price: parseFloat(rowData['price']) || 0,
-                    amount: parseFloat(rowData['amount']) || 0,
-                    fee: parseFloat(rowData['fee']) || 0,
-                    tax: parseFloat(rowData['tax']) || 0,
-                    
-                    currency: rowData['currency'],
-                    description: rowData['description']
-                };
-
-                dataResult.push(transaction);
-            }
-
-            return dataResult;
-        }
-
-        // Fonction utilitaire pour mettre à jour la console de log sur l'interface
-        function showStatus(message, isError) {
-            const logDiv = document.getElementById('statusLog');
-            logDiv.style.display = 'block';
-            logDiv.textContent = message;
-            if (isError) {
-                logDiv.classList.add('error-log');
+            if (b.acc === 'PEA') {
+                if (b.type === 'BUY') appData.pea.historique.push({ id: generateId(), type: 'achat', date: b.date, etf: b.name, total: b.amount });
             } else {
-                logDiv.classList.remove('error-log');
+                appData.cto.historique.push({ id: generateId(), type: b.type, date: b.date, actif: b.name, total: b.amount });
             }
         }
-    </script>
+        saveData();
+        alert('Import terminé !');
+        location.reload();
+    };
+    reader.readAsText(input.files[0]);
+}
+
+// --- AFFICHAGE & NAVIGATION ---
+function switchMain(section) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.btn-nav-main').forEach(b => b.classList.remove('active'));
+    document.getElementById(section + '-section').classList.add('active');
+    event.currentTarget.classList.add('active');
+}
+
+function render() {
+    let peaHist = document.getElementById('pea-history');
+    peaHist.innerHTML = appData.pea.historique.map(h => `
+        <div class="hist-item">
+            <div class="hist-content"><b>${h.etf}</b><br><small>${h.date} - ${h.total}€</small></div>
+            <button class="btn-delete-item" onclick="deleteItem('pea', '${h.id}')">✕</button>
+        </div>
+    `).join('');
+    
+    let ctoHist = document.getElementById('cto-history');
+    ctoHist.innerHTML = appData.cto.historique.map(h => `
+        <div class="hist-item">
+            <div class="hist-content"><b>${h.actif}</b><br><small>${h.type} - ${h.total}€</small></div>
+            <button class="btn-delete-item" onclick="deleteItem('cto', '${h.id}')">✕</button>
+        </div>
+    `).join('');
+}
+
+function deleteItem(type, id) {
+    appData[type].historique = appData[type].historique.filter(item => item.id !== id);
+    saveData();
+    render();
+}
+
+render();
+</script>
+
+
 </body>
 </html>
