@@ -197,6 +197,19 @@
         }
 
         .error-msg { color: var(--neon-red); font-size: 12px; text-align: center; margin-top: 10px; display: none; }
+        
+        /* --- CONSOLE DEBUG --- */
+        .debug-console {
+            font-family: monospace;
+            font-size: 11px;
+            padding: 12px;
+            border-radius: 10px;
+            margin-top: 15px;
+            background: rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.05);
+            color: var(--text-muted);
+            word-break: break-all;
+        }
     </style>
 </head>
 <body>
@@ -242,11 +255,13 @@
                     <div class="section-title">Évolution Température (°C)</div>
                     <div class="chart-container"><canvas id="tempChart"></canvas></div>
 
-                    <div class="section-title">Précipitations cumulées (mm)</div>
+                    <div class="section-title">Précipitations (mm)</div>
                     <div class="chart-container"><canvas id="rainChart"></canvas></div>
 
                     <div class="section-title">Vents & Rafales (km/h)</div>
                     <div class="chart-container"><canvas id="windChart"></canvas></div>
+                    
+                    <div id="api-debug-log" class="debug-console">Statut API : En attente...</div>
                 </div>
             </div>
 
@@ -337,6 +352,7 @@
             const appKey = localStorage.getItem("ecowitt_app_key");
             const apiKey = localStorage.getItem("ecowitt_api_key");
             const mac = localStorage.getItem("ecowitt_mac");
+            const debugLog = document.getElementById("api-debug-log");
             
             const now = Math.floor(Date.now() / 1000);
             let startTime = now - (24 * 3600);
@@ -350,37 +366,63 @@
                 cycle = "86400"; // 1 jour
             }
 
-            const url = `https://api.ecowitt.net/api/v3/device/history?application_key=${appKey}&api_key=${apiKey}&mac=${mac}&start_time=${startTime}&end_time=${now}&cycle=${cycle}&call_back=outdoor.temperature,rainfall.hourly,wind.wind_speed,wind.gust&temp_unitid=1&wind_speed_unitid=7&rainfall_unitid=12`;
+            const url = `https://api.ecowitt.net/api/v3/device/history?application_key=${appKey}&api_key=${apiKey}&mac=${mac}&start_time=${startTime}&end_time=${now}&cycle=${cycle}&call_back=outdoor.temperature,rainfall.rain_rate,wind.wind_speed,wind.gust&temp_unitid=1&wind_speed_unitid=7&rainfall_unitid=12`;
             
             try {
+                debugLog.innerText = "Chargement des graphiques...";
                 const res = await fetch(url);
                 const json = await res.json();
-                if (json.code === 0 && json.data) {
-                    buildCharts(json.data);
+                
+                if (json.code !== 0) {
+                    debugLog.style.color = "var(--neon-red)";
+                    debugLog.innerText = `Erreur API Ecowitt [Code ${json.code}] : ${json.msg || 'Vérifie tes paramètres'}`;
+                    return;
                 }
-            } catch (e) { console.error("Erreur historique", e); }
+                
+                if (!json.data || Object.keys(json.data).length === 0) {
+                    debugLog.style.color = "var(--neon-orange)";
+                    debugLog.innerText = "Aucune donnée historique renvoyée pour cette période.";
+                    return;
+                }
+
+                debugLog.style.color = "var(--neon-green)";
+                debugLog.innerText = "Données synchronisées avec succès.";
+                buildCharts(json.data);
+
+            } catch (e) { 
+                debugLog.style.color = "var(--neon-red)";
+                debugLog.innerText = `Erreur réseau ou crash : ${e.message}`;
+            }
         }
 
         function buildCharts(data) {
-            // Extraction basique et alignement des listes de l'API Ecowitt v3
             const tempObj = data.outdoor?.temperature?.list || {};
-            const rainObj = data.rainfall?.hourly?.list || {};
+            const rainObj = data.rainfall?.rain_rate?.list || {};
             const windObj = data.wind?.wind_speed?.list || {};
             const gustObj = data.wind?.gust?.list || {};
 
-            const timestamps = Object.keys(tempObj).sort();
+            // Fusion unique et triée de tous les timestamps pour éviter les décalages entre capteurs
+            const allTimestamps = new Set([
+                ...Object.keys(tempObj),
+                ...Object.keys(rainObj),
+                ...Object.keys(windObj),
+                ...Object.keys(gustObj)
+            ]);
+            const timestamps = Array.from(allTimestamps).sort((a, b) => Number(a) - Number(b));
             
+            if (timestamps.length === 0) return;
+
             const labels = timestamps.map(ts => {
                 const d = new Date(ts * 1000);
                 return currentRange === '24h' ? `${d.getHours()}:00` : `${d.getDate()}/${d.getMonth()+1}`;
             });
 
-            const tempData = timestamps.map(ts => parseFloat(tempObj[ts]));
-            const rainData = timestamps.map(ts => parseFloat(rainObj[ts] || 0));
-            const windData = timestamps.map(ts => parseFloat(windObj[ts] || 0));
-            const gustData = timestamps.map(ts => parseFloat(gustObj[ts] || 0));
+            // Mapping propre : renvoie null si le point est manquant (Chart.js le gère proprement en sautant le point)
+            const tempData = timestamps.map(ts => tempObj[ts] !== undefined ? parseFloat(tempObj[ts]) : null);
+            const rainData = timestamps.map(ts => rainObj[ts] !== undefined ? parseFloat(rainObj[ts]) : 0);
+            const windData = timestamps.map(ts => windObj[ts] !== undefined ? parseFloat(windObj[ts]) : null);
+            const gustData = timestamps.map(ts => gustObj[ts] !== undefined ? parseFloat(gustObj[ts]) : null);
 
-            // Options globales communes basées sur ta charte graphique
             const chartOptions = {
                 responsive: true,
                 maintainAspectRatio: false,
@@ -398,7 +440,7 @@
                 borderColor: function(context) {
                     const chart = context.chart;
                     const {ctx, chartArea} = chart;
-                    if (!chartArea) return null;
+                    if (!chartArea) return '#38bdf8'; // Couleur unie temporaire au premier frame
                     const gradient = ctx.createLinearGradient(chartArea.left, 0, chartArea.right, 0);
                     gradient.addColorStop(0, '#38bdf8');
                     gradient.addColorStop(1, '#4ade80');
@@ -408,7 +450,7 @@
                 backgroundColor: function(context) {
                     const chart = context.chart;
                     const {ctx, chartArea} = chart;
-                    if (!chartArea) return null;
+                    if (!chartArea) return 'rgba(56, 189, 248, 0.05)';
                     const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
                     gradient.addColorStop(0, 'rgba(56, 189, 248, 0.2)');
                     gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
@@ -426,7 +468,7 @@
                 backgroundColor: function(context) {
                     const chart = context.chart;
                     const {ctx, chartArea} = chart;
-                    if (!chartArea) return null;
+                    if (!chartArea) return 'rgba(74, 222, 128, 0.2)';
                     const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
                     gradient.addColorStop(0, 'rgba(74, 222, 128, 0.65)');
                     gradient.addColorStop(1, 'rgba(74, 222, 128, 0.05)');
@@ -457,7 +499,7 @@
 
         function initChart(canvasId, type, labels, datasets, options) {
             if (charts[canvasId]) charts[canvasId].destroy();
-            ctx = document.getElementById(canvasId).getContext('2d');
+            const ctx = document.getElementById(canvasId).getContext('2d');
             charts[canvasId] = new Chart(ctx, { type, data: { labels, datasets }, options });
         }
 
