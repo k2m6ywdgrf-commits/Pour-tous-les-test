@@ -25,6 +25,7 @@
             --neon-green: #4ade80;
             --neon-red: #f43f5e;
             --neon-orange: #fbbf24;
+            --neon-purple: #a78bfa;
         }
         
         * {
@@ -183,16 +184,75 @@
         .kpi-box.full { grid-column: span 2; }
         .kpi-val { font-size: 26px; font-weight: 700; margin-top: 4px; }
         
-        .color-temp { color: var(--neon-green); }
+        .color-temp     { color: var(--neon-green); }
         .color-humidity { color: var(--neon-blue); }
-        .color-wind { color: var(--neon-orange); }
-        .color-rain { color: #a78bfa; }
+        .color-wind     { color: var(--neon-orange); }
+        .color-rain     { color: var(--neon-purple); }
+
+        /* --- COMPASS --- */
+        .compass-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .compass-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            width: 100%;
+            font-size: 12px;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        .compass-meta strong {
+            display: block;
+            font-size: 17px;
+            font-weight: 700;
+        }
+
+        .compass-meta .meta-center {
+            text-align: center;
+        }
+
+        .compass-meta .meta-right {
+            text-align: right;
+        }
+
+        /* --- PRÉCIPITATIONS GRID --- */
+        .rain-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .rain-cell {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .rain-label {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .rain-val {
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--neon-purple);
+        }
 
         /* --- GRAPHICS CONTAINER --- */
         .chart-container {
             position: relative;
             margin-bottom: 25px;
-            height: 180px;
+            height: 220px;
             width: 100%;
         }
 
@@ -223,7 +283,7 @@
             <div class="form-group"><label>API KEY</label><input type="password" id="api-key"></div>
             <div class="form-group"><label>ADRESSE MAC</label><input type="text" id="mac-addr" placeholder="AA:BB:CC:DD:EE:FF"></div>
             <button class="btn" onclick="tryLogin()">Enregistrer & Se connecter</button>
-            <div id="login-error" class="error-msg">Identifiants invalides.</div>
+            <div id="login-error" class="error-msg">Identifiants invalides ou erreur réseau.</div>
         </div>
 
         <div id="dashboard-screen" class="screen">
@@ -238,8 +298,7 @@
                     <h1 style="text-align: left; font-size: 20px;" id="station-title">Ma Station</h1>
                     <div id="sync-time" style="font-size: 11px; color: var(--text-muted); margin-bottom: 20px;">Actualisation...</div>
                     <div class="section-title">Indicateurs clés</div>
-                    <div class="kpi-grid" id="weather-live-grid">
-                        </div>
+                    <div class="kpi-grid" id="weather-live-grid"></div>
                     <button class="btn" style="margin-top: 20px;" onclick="refreshLive()">Actualiser</button>
                 </div>
             </div>
@@ -255,7 +314,10 @@
                     <div class="section-title">Évolution Température (°C)</div>
                     <div class="chart-container"><canvas id="tempChart"></canvas></div>
 
-                    <div class="section-title">Précipitations (mm)</div>
+                    <div class="section-title">Humidité (%)</div>
+                    <div class="chart-container"><canvas id="humidityChart"></canvas></div>
+
+                    <div class="section-title">Précipitations cumulées (mm)</div>
                     <div class="chart-container"><canvas id="rainChart"></canvas></div>
 
                     <div class="section-title">Vents & Rafales (km/h)</div>
@@ -273,11 +335,14 @@
     <script>
         let currentRange = '24h';
         let charts = {};
+        let historyCache = {};
+        let autoRefreshTimer = null;
 
         document.addEventListener("DOMContentLoaded", () => {
             if (localStorage.getItem("ecowitt_app_key")) {
                 showScreen("dashboard-screen");
                 refreshLive();
+                startAutoRefresh();
             } else {
                 showScreen("login-screen");
             }
@@ -302,206 +367,496 @@
             loadHistoryData();
         }
 
+        function startAutoRefresh() {
+            clearInterval(autoRefreshTimer);
+            autoRefreshTimer = setInterval(() => {
+                const activeTab = document.getElementById('tab-live').classList.contains('active');
+                if (activeTab) refreshLive();
+            }, 5 * 60 * 1000); // toutes les 5 min
+        }
+
         async function tryLogin() {
             const appKey = document.getElementById("app-key").value.trim();
             const apiKey = document.getElementById("api-key").value.trim();
-            const mac = document.getElementById("mac-addr").value.trim();
-            
-            const success = await fetchLive(appKey, apiKey, mac);
-            if (success) {
-                localStorage.setItem("ecowitt_app_key", appKey);
-                localStorage.setItem("ecowitt_api_key", apiKey);
-                localStorage.setItem("ecowitt_mac", mac);
-                showScreen("dashboard-screen");
-            } else {
-                document.getElementById("login-error").style.display = "block";
+            const mac    = document.getElementById("mac-addr").value.trim();
+            const errEl  = document.getElementById("login-error");
+            errEl.style.display = "none";
+
+            try {
+                const success = await fetchLive(appKey, apiKey, mac);
+                if (success) {
+                    localStorage.setItem("ecowitt_app_key", appKey);
+                    localStorage.setItem("ecowitt_api_key", apiKey);
+                    localStorage.setItem("ecowitt_mac", mac);
+                    showScreen("dashboard-screen");
+                    startAutoRefresh();
+                } else {
+                    errEl.innerText = "Clés invalides — vérifie ton Application Key et API Key.";
+                    errEl.style.display = "block";
+                }
+            } catch {
+                errEl.innerText = "Erreur réseau — vérifie ta connexion.";
+                errEl.style.display = "block";
             }
         }
 
         function refreshLive() {
-            fetchLive(localStorage.getItem("ecowitt_app_key"), localStorage.getItem("ecowitt_api_key"), localStorage.getItem("ecowitt_mac"));
+            fetchLive(
+                localStorage.getItem("ecowitt_app_key"),
+                localStorage.getItem("ecowitt_api_key"),
+                localStorage.getItem("ecowitt_mac")
+            );
         }
 
         async function fetchLive(appKey, apiKey, mac) {
             const url = `https://api.ecowitt.net/api/v3/device/real_time?application_key=${appKey}&api_key=${apiKey}&mac=${mac}&call_back=all&temp_unitid=1&wind_speed_unitid=7&rainfall_unitid=12&pressure_unitid=3`;
-            try {
-                const res = await fetch(url);
-                const json = await res.json();
-                if (json.code === 0 && json.data) {
-                    renderLiveGrid(json.data);
-                    return true;
-                }
-                return false;
-            } catch { return false; }
+            const res  = await fetch(url);
+            const json = await res.json();
+            if (json.code === 0 && json.data) {
+                renderLiveGrid(json.data);
+                return true;
+            }
+            return false;
         }
 
+        /* -------------------------------------------------
+           BOUSSOLE VENT
+        ------------------------------------------------- */
+        function drawCompass(canvas, degrees) {
+            const size = 160;
+            canvas.width = canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            const cx = size / 2, cy = size / 2, r = 68;
+            ctx.clearRect(0, 0, size, size);
+
+            // Fond glass
+            ctx.beginPath();
+            ctx.arc(cx, cy, r + 6, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.75)';
+            ctx.fill();
+
+            // Micro-ticks (tous les 10°)
+            for (let i = 0; i < 36; i++) {
+                const angle = (i * 10 - 90) * Math.PI / 180;
+                const isMajor = i % 9 === 0;
+                ctx.beginPath();
+                ctx.moveTo(cx + Math.cos(angle) * (r - 2), cy + Math.sin(angle) * (r - 2));
+                ctx.lineTo(cx + Math.cos(angle) * (r - (isMajor ? 10 : 5)), cy + Math.sin(angle) * (r - (isMajor ? 10 : 5)));
+                ctx.strokeStyle = isMajor ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.1)';
+                ctx.lineWidth = isMajor ? 1.5 : 0.8;
+                ctx.stroke();
+            }
+
+            // Anneau néon cyan avec glow
+            ctx.shadowBlur = 16;
+            ctx.shadowColor = '#38bdf8';
+            ctx.beginPath();
+            ctx.arc(cx, cy, r, 0, Math.PI * 2);
+            ctx.strokeStyle = '#38bdf8';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+
+            // Labels cardinaux (N S E O)
+            const cardinalsFour = [
+                { label: 'N', angle: -90 },
+                { label: 'E', angle:   0 },
+                { label: 'S', angle:  90 },
+                { label: 'O', angle: 180 },
+            ];
+            cardinalsFour.forEach(({ label, angle }) => {
+                const rad = angle * Math.PI / 180;
+                const lx = cx + Math.cos(rad) * (r - 16);
+                const ly = cy + Math.sin(rad) * (r - 16);
+                ctx.fillStyle = label === 'N' ? '#38bdf8' : 'rgba(255,255,255,0.5)';
+                ctx.font = `700 11px -apple-system, sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(label, lx, ly);
+            });
+
+            // Flèche vent (pointe dans la direction d'où vient le vent)
+            const rad = (degrees - 90) * Math.PI / 180;
+            const arrowLen = r - 24;
+
+            // Queue (opposée)
+            const tailX = cx - Math.cos(rad) * (arrowLen * 0.45);
+            const tailY = cy - Math.sin(rad) * (arrowLen * 0.45);
+            const tipX  = cx + Math.cos(rad) * arrowLen;
+            const tipY  = cy + Math.sin(rad) * arrowLen;
+
+            // Trait de la flèche
+            ctx.shadowBlur = 12;
+            ctx.shadowColor = '#fbbf24';
+            ctx.beginPath();
+            ctx.moveTo(tailX, tailY);
+            ctx.lineTo(tipX, tipY);
+            ctx.strokeStyle = 'rgba(251,191,36,0.6)';
+            ctx.lineWidth = 2;
+            ctx.lineCap = 'round';
+            ctx.stroke();
+
+            // Tête de flèche
+            const perpX = -Math.sin(rad) * 5;
+            const perpY =  Math.cos(rad) * 5;
+            ctx.beginPath();
+            ctx.moveTo(tipX, tipY);
+            ctx.lineTo(tipX - Math.cos(rad) * 13 + perpX, tipY - Math.sin(rad) * 13 + perpY);
+            ctx.lineTo(tipX - Math.cos(rad) * 13 - perpX, tipY - Math.sin(rad) * 13 - perpY);
+            ctx.closePath();
+            ctx.fillStyle = '#fbbf24';
+            ctx.fill();
+            ctx.shadowBlur = 0;
+
+            // Point central
+            ctx.beginPath();
+            ctx.arc(cx, cy, 3, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255,255,255,0.3)';
+            ctx.fill();
+
+            // Degrés + cardinalité au centre
+            const dirs = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSO','SO','OSO','O','ONO','NO','NNO'];
+            const cardinal = dirs[Math.round(degrees / 22.5) % 16];
+            ctx.fillStyle = '#f3f4f6';
+            ctx.font = `700 19px -apple-system, sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(`${degrees}°`, cx, cy - 8);
+            ctx.fillStyle = '#38bdf8';
+            ctx.font = `600 12px -apple-system, sans-serif`;
+            ctx.fillText(cardinal, cx, cy + 11);
+        }
+
+        /* -------------------------------------------------
+           RENDU GRILLE LIVE
+        ------------------------------------------------- */
         function renderLiveGrid(data) {
             const grid = document.getElementById("weather-live-grid");
+            const dir  = data.wind?.wind_direction?.value ?? null;
+            const dirs = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSO','SO','OSO','O','ONO','NO','NNO'];
+            const cardinal = dir !== null ? dirs[Math.round(parseInt(dir) / 22.5) % 16] : '—';
             let html = "";
-            if (data.outdoor?.temperature) html += `<div class="kpi-box"><div class="section-title">Température</div><div class="kpi-val color-temp">${data.outdoor.temperature.value} °C</div></div>`;
-            if (data.outdoor?.humidity) html += `<div class="kpi-box"><div class="section-title">Humidité</div><div class="kpi-val color-humidity">${data.outdoor.humidity.value} %</div></div>`;
-            if (data.wind?.wind_speed) html += `<div class="kpi-box"><div class="section-title">Vent</div><div class="kpi-val color-wind">${data.wind.wind_speed.value} <span style="font-size:12px">km/h</span></div></div>`;
-            if (data.rainfall?.hourly) html += `<div class="kpi-box"><div class="section-title">Pluie / Heure</div><div class="kpi-val color-rain">${data.rainfall.hourly.value} <span style="font-size:12px">mm</span></div></div>`;
-            if (data.pressure?.relative) html += `<div class="kpi-box full"><div class="section-title">Pression Relative</div><div class="kpi-val" style="color:var(--text-main)">${data.pressure.relative.value} hPa</div></div>`;
+
+            // Température + Humidité
+            if (data.outdoor?.temperature) {
+                html += `<div class="kpi-box">
+                    <div class="section-title">Température</div>
+                    <div class="kpi-val color-temp">${data.outdoor.temperature.value} °C</div>
+                </div>`;
+            }
+            if (data.outdoor?.humidity) {
+                html += `<div class="kpi-box">
+                    <div class="section-title">Humidité</div>
+                    <div class="kpi-val color-humidity">${data.outdoor.humidity.value} %</div>
+                </div>`;
+            }
+
+            // Boussole vent (full-width)
+            if (dir !== null) {
+                html += `
+                <div class="kpi-box full">
+                    <div class="section-title">Direction & Vitesse du vent</div>
+                    <div class="compass-wrap">
+                        <canvas id="compass-canvas"></canvas>
+                        <div class="compass-meta">
+                            <div>
+                                <span>Vent moyen</span>
+                                <strong class="color-wind">${data.wind?.wind_speed?.value ?? '—'} <span style="font-size:11px;font-weight:400">km/h</span></strong>
+                            </div>
+                            <div class="meta-center">
+                                <span>Direction</span>
+                                <strong style="color:var(--neon-blue)">${parseInt(dir)}° ${cardinal}</strong>
+                            </div>
+                            <div class="meta-right">
+                                <span>Rafale</span>
+                                <strong class="color-wind">${data.wind?.wind_gust?.value ?? '—'} <span style="font-size:11px;font-weight:400">km/h</span></strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            } else {
+                if (data.wind?.wind_speed) {
+                    html += `<div class="kpi-box full">
+                        <div class="section-title">Vent</div>
+                        <div class="kpi-val color-wind">${data.wind.wind_speed.value} <span style="font-size:12px">km/h</span></div>
+                    </div>`;
+                }
+            }
+
+            // Précipitations multi-périodes
+            const rf = data.rainfall;
+            if (rf) {
+                const metrics = [
+                    { key: 'event',   label: 'Événement' },
+                    { key: 'hourly',  label: 'Horaire'   },
+                    { key: 'daily',   label: 'Quotidien' },
+                    { key: 'weekly',  label: 'Hebdo'     },
+                    { key: 'monthly', label: 'Mensuel'   },
+                    { key: 'yearly',  label: 'Annuel'    },
+                ];
+                const cells = metrics
+                    .filter(m => rf[m.key]?.value !== undefined)
+                    .map(m => `
+                        <div class="rain-cell">
+                            <span class="rain-label">${m.label}</span>
+                            <span class="rain-val">${rf[m.key].value}<span style="font-size:11px;font-weight:400;color:var(--text-muted)"> mm</span></span>
+                        </div>`).join('');
+
+                if (cells) {
+                    html += `<div class="kpi-box full">
+                        <div class="section-title">Précipitations</div>
+                        <div class="rain-grid">${cells}</div>
+                    </div>`;
+                }
+            }
+
+            // Pression
+            if (data.pressure?.relative) {
+                html += `<div class="kpi-box full">
+                    <div class="section-title">Pression Relative</div>
+                    <div class="kpi-val" style="color:var(--text-main)">${data.pressure.relative.value} <span style="font-size:14px;font-weight:400">hPa</span></div>
+                </div>`;
+            }
+
             grid.innerHTML = html;
+
+            // Dessin boussole après injection DOM
+            if (dir !== null) {
+                const canvas = document.getElementById('compass-canvas');
+                if (canvas) drawCompass(canvas, parseInt(dir));
+            }
+
             document.getElementById("sync-time").innerText = `Mis à jour : ${new Date().toLocaleTimeString('fr-FR')}`;
         }
 
+        /* -------------------------------------------------
+           FORMATAGE DATE ECOWITT
+        ------------------------------------------------- */
         function formatDateEcowitt(date) {
-            const pad = (n) => String(n).padStart(2, '0');
-            return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+            const pad = n => String(n).padStart(2, '0');
+            return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
         }
 
-        /* --- GESTION DE L'HISTORIQUE --- */
+        /* -------------------------------------------------
+           HISTORIQUE — avec cache par plage
+        ------------------------------------------------- */
         async function loadHistoryData() {
-            const appKey = localStorage.getItem("ecowitt_app_key");
-            const apiKey = localStorage.getItem("ecowitt_api_key");
-            const mac = localStorage.getItem("ecowitt_mac");
+            if (historyCache[currentRange]) {
+                buildCharts(historyCache[currentRange]);
+                return;
+            }
+
+            const appKey   = localStorage.getItem("ecowitt_app_key");
+            const apiKey   = localStorage.getItem("ecowitt_api_key");
+            const mac      = localStorage.getItem("ecowitt_mac");
             const debugLog = document.getElementById("api-debug-log");
-            
+
             const now = new Date();
-            let startTime = new Date(now.getTime() - (24 * 3600 * 1000));
-            let cycle = "1800"; 
+            let startTime = new Date(now.getTime() - 24 * 3600 * 1000);
+            let cycle = "1800";
 
             if (currentRange === '7j') {
-                startTime = new Date(now.getTime() - (7 * 24 * 3600 * 1000));
-                cycle = "14400"; 
+                startTime = new Date(now.getTime() - 7 * 24 * 3600 * 1000);
+                cycle = "14400";
             } else if (currentRange === '30j') {
-                startTime = new Date(now.getTime() - (30 * 24 * 3600 * 1000));
-                cycle = "86400"; 
+                startTime = new Date(now.getTime() - 30 * 24 * 3600 * 1000);
+                cycle = "86400";
             }
 
             const startDateStr = formatDateEcowitt(startTime);
-            const endDateStr = formatDateEcowitt(now);
+            const endDateStr   = formatDateEcowitt(now);
 
-            // CORRECTION ICI : wind.wind_gust au lieu de wind.gust
-            const url = `https://api.ecowitt.net/api/v3/device/history?application_key=${appKey}&api_key=${apiKey}&mac=${mac}&start_date=${encodeURIComponent(startDateStr)}&end_date=${encodeURIComponent(endDateStr)}&cycle=${cycle}&call_back=outdoor.temperature,rainfall.rain_rate,wind.wind_speed,wind.wind_gust&temp_unitid=1&wind_speed_unitid=7&rainfall_unitid=12`;
-            
+            const url = `https://api.ecowitt.net/api/v3/device/history?application_key=${appKey}&api_key=${apiKey}&mac=${mac}&start_date=${encodeURIComponent(startDateStr)}&end_date=${encodeURIComponent(endDateStr)}&cycle=${cycle}&call_back=outdoor.temperature,outdoor.humidity,rainfall.daily,wind.wind_speed,wind.wind_gust&temp_unitid=1&wind_speed_unitid=7&rainfall_unitid=12`;
+
             try {
+                debugLog.style.color = "var(--text-muted)";
                 debugLog.innerText = "Chargement des graphiques...";
-                const res = await fetch(url);
+                const res  = await fetch(url);
                 const json = await res.json();
-                
+
                 if (json.code !== 0) {
                     debugLog.style.color = "var(--neon-red)";
-                    debugLog.innerText = `Erreur API Ecowitt [Code ${json.code}] : ${json.msg || 'Vérifie tes paramètres'}`;
+                    debugLog.innerText = `Erreur API [Code ${json.code}] : ${json.msg || 'Vérifie tes paramètres'}`;
                     return;
                 }
-                
+
                 if (!json.data || Object.keys(json.data).length === 0) {
                     debugLog.style.color = "var(--neon-orange)";
-                    debugLog.innerText = "Aucune donnée historique renvoyée pour cette période.";
+                    debugLog.innerText = "Aucune donnée historique pour cette période.";
                     return;
                 }
 
+                historyCache[currentRange] = json.data;
                 debugLog.style.color = "var(--neon-green)";
-                debugLog.innerText = "Données synchronisées avec succès.";
+                debugLog.innerText = "Données synchronisées ✓";
                 buildCharts(json.data);
 
-            } catch (e) { 
+            } catch (e) {
                 debugLog.style.color = "var(--neon-red)";
-                debugLog.innerText = `Erreur réseau ou crash : ${e.message}`;
+                debugLog.innerText = `Erreur réseau : ${e.message}`;
             }
         }
 
+        /* -------------------------------------------------
+           CONSTRUCTION DES GRAPHIQUES
+        ------------------------------------------------- */
         function buildCharts(data) {
-            const tempObj = data.outdoor?.temperature?.list || {};
-            const rainObj = data.rainfall?.rain_rate?.list || {}; 
-            const windObj = data.wind?.wind_speed?.list || {};
-            const gustObj = data.wind?.wind_gust?.list || {}; // Lecture ajustée ici aussi
+            const tempObj     = data.outdoor?.temperature?.list || {};
+            const humidObj    = data.outdoor?.humidity?.list    || {};
+            const rainObj     = data.rainfall?.daily?.list      || {};
+            const windObj     = data.wind?.wind_speed?.list     || {};
+            const gustObj     = data.wind?.wind_gust?.list      || {};
 
-            const allTimestamps = new Set([
+            const allTs = new Set([
                 ...Object.keys(tempObj),
+                ...Object.keys(humidObj),
                 ...Object.keys(rainObj),
                 ...Object.keys(windObj),
-                ...Object.keys(gustObj)
+                ...Object.keys(gustObj),
             ]);
-            const timestamps = Array.from(allTimestamps).sort((a, b) => Number(a) - Number(b));
-            
+            const timestamps = Array.from(allTs).sort((a, b) => Number(a) - Number(b));
             if (timestamps.length === 0) return;
 
+            // Labels propres : HH:MM en 24h, JJ/MM en 7j et 30j
             const labels = timestamps.map(ts => {
                 const d = new Date(ts * 1000);
-                return currentRange === '24h' ? `${d.getHours()}:00` : `${d.getDate()}/${d.getMonth()+1}`;
+                if (currentRange === '24h') {
+                    return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+                }
+                return `${d.getDate()}/${d.getMonth() + 1}`;
             });
 
-            const tempData = timestamps.map(ts => tempObj[ts] !== undefined ? parseFloat(tempObj[ts]) : null);
-            const rainData = timestamps.map(ts => rainObj[ts] !== undefined ? parseFloat(rainObj[ts]) : 0);
-            const windData = timestamps.map(ts => windObj[ts] !== undefined ? parseFloat(windObj[ts]) : null);
-            const gustData = timestamps.map(ts => gustObj[ts] !== undefined ? parseFloat(gustObj[ts]) : null);
+            const tempData  = timestamps.map(ts => tempObj[ts]  !== undefined ? parseFloat(tempObj[ts])  : null);
+            const humidData = timestamps.map(ts => humidObj[ts] !== undefined ? parseFloat(humidObj[ts]) : null);
+            const rainData  = timestamps.map(ts => rainObj[ts]  !== undefined ? parseFloat(rainObj[ts])  : 0);
+            const windData  = timestamps.map(ts => windObj[ts]  !== undefined ? parseFloat(windObj[ts])  : null);
+            const gustData  = timestamps.map(ts => gustObj[ts]  !== undefined ? parseFloat(gustObj[ts])  : null);
 
-            const chartOptions = {
+            // Options communes
+            const maxTicks = currentRange === '24h' ? 8 : (currentRange === '7j' ? 7 : 10);
+            const baseOpts = {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
                 scales: {
-                    x: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { display: false } },
-                    y: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: 'rgba(255, 255, 255, 0.03)' } }
+                    x: {
+                        ticks: {
+                            color: '#94a3b8',
+                            font: { size: 10 },
+                            maxTicksLimit: maxTicks,
+                            maxRotation: 0,
+                        },
+                        grid: { display: false }
+                    },
+                    y: {
+                        ticks: { color: '#94a3b8', font: { size: 10 } },
+                        grid: { color: 'rgba(255, 255, 255, 0.04)' }
+                    }
                 }
             };
 
-            // 1. Graphe Température
+            // 1. Température
             initChart('tempChart', 'line', labels, [{
                 data: tempData,
-                borderWidth: 3,
-                borderColor: function(context) {
-                    const chart = context.chart;
-                    const {ctx, chartArea} = chart;
+                borderWidth: 2.5,
+                borderColor: ctx => {
+                    const { chart } = ctx;
+                    const { chartArea } = chart;
                     if (!chartArea) return '#38bdf8';
-                    const gradient = ctx.createLinearGradient(chartArea.left, 0, chartArea.right, 0);
-                    gradient.addColorStop(0, '#38bdf8');
-                    gradient.addColorStop(1, '#4ade80');
-                    return gradient;
+                    const g = chart.ctx.createLinearGradient(chartArea.left, 0, chartArea.right, 0);
+                    g.addColorStop(0, '#38bdf8');
+                    g.addColorStop(1, '#4ade80');
+                    return g;
                 },
                 fill: true,
-                backgroundColor: function(context) {
-                    const chart = context.chart;
-                    const {ctx, chartArea} = chart;
-                    if (!chartArea) return 'rgba(56, 189, 248, 0.05)';
-                    const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-                    gradient.addColorStop(0, 'rgba(56, 189, 248, 0.2)');
-                    gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-                    return gradient;
+                backgroundColor: ctx => {
+                    const { chart } = ctx;
+                    const { chartArea } = chart;
+                    if (!chartArea) return 'rgba(56,189,248,0.05)';
+                    const g = chart.ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+                    g.addColorStop(0, 'rgba(56,189,248,0.2)');
+                    g.addColorStop(1, 'rgba(0,0,0,0)');
+                    return g;
                 },
-                tension: 0.3
-            }], chartOptions);
+                tension: 0.35,
+                pointRadius: 0,
+                spanGaps: true,
+            }], baseOpts);
 
-            // 2. Graphe Pluie
+            // 2. Humidité
+            initChart('humidityChart', 'line', labels, [{
+                data: humidData,
+                borderWidth: 2.5,
+                borderColor: '#38bdf8',
+                fill: true,
+                backgroundColor: ctx => {
+                    const { chart } = ctx;
+                    const { chartArea } = chart;
+                    if (!chartArea) return 'rgba(56,189,248,0.05)';
+                    const g = chart.ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+                    g.addColorStop(0, 'rgba(56,189,248,0.18)');
+                    g.addColorStop(1, 'rgba(0,0,0,0)');
+                    return g;
+                },
+                tension: 0.35,
+                pointRadius: 0,
+                spanGaps: true,
+            }], baseOpts);
+
+            // 3. Pluie (cumul journalier)
             initChart('rainChart', 'bar', labels, [{
                 data: rainData,
-                borderRadius: 6,
+                borderRadius: 5,
                 borderWidth: 1.5,
-                borderColor: '#4ade80',
-                backgroundColor: function(context) {
-                    const chart = context.chart;
-                    const {ctx, chartArea} = chart;
-                    if (!chartArea) return 'rgba(74, 222, 128, 0.2)';
-                    const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-                    gradient.addColorStop(0, 'rgba(74, 222, 128, 0.65)');
-                    gradient.addColorStop(1, 'rgba(74, 222, 128, 0.05)');
-                    return gradient;
-                }
-            }], chartOptions);
+                borderColor: '#a78bfa',
+                backgroundColor: ctx => {
+                    const { chart } = ctx;
+                    const { chartArea } = chart;
+                    if (!chartArea) return 'rgba(167,139,250,0.2)';
+                    const g = chart.ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+                    g.addColorStop(0, 'rgba(167,139,250,0.7)');
+                    g.addColorStop(1, 'rgba(167,139,250,0.05)');
+                    return g;
+                },
+            }], baseOpts);
 
-            // 3. Graphe Vent
+            // 4. Vent (légende activée pour Moyen vs Rafales)
+            const windOpts = {
+                ...baseOpts,
+                plugins: {
+                    legend: {
+                        display: true,
+                        labels: {
+                            color: '#94a3b8',
+                            font: { size: 11 },
+                            boxWidth: 20,
+                            padding: 12,
+                        }
+                    }
+                }
+            };
             initChart('windChart', 'line', labels, [
                 {
                     data: windData,
                     label: 'Moyen',
                     borderWidth: 1.5,
-                    borderColor: 'rgba(251, 191, 36, 0.5)',
+                    borderColor: 'rgba(251,191,36,0.45)',
                     fill: false,
-                    tension: 0.3
+                    tension: 0.35,
+                    pointRadius: 0,
+                    spanGaps: true,
                 },
                 {
                     data: gustData,
                     label: 'Rafales',
-                    borderWidth: 3,
+                    borderWidth: 2.5,
                     borderColor: '#fbbf24',
                     fill: false,
-                    tension: 0.3
+                    tension: 0.35,
+                    pointRadius: 0,
+                    spanGaps: true,
                 }
-            ], chartOptions);
+            ], windOpts);
         }
 
         function initChart(canvasId, type, labels, datasets, options) {
@@ -511,6 +866,8 @@
         }
 
         function logout() {
+            clearInterval(autoRefreshTimer);
+            historyCache = {};
             localStorage.clear();
             showScreen("login-screen");
         }
