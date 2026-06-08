@@ -4,873 +4,782 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Ecowitt Premium Dashboard</title>
-    
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Météo Glass">
-    
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
     <style>
         :root {
-            --bg-color: #000000;
             --glass-bg: rgba(22, 28, 45, 0.65);
             --glass-border: 1px solid rgba(255, 255, 255, 0.08);
             --input-bg: rgba(30, 41, 59, 0.7);
-            
             --text-main: #f3f4f6;
             --text-muted: #94a3b8;
-            
             --neon-blue: #38bdf8;
             --neon-green: #4ade80;
             --neon-red: #f43f5e;
             --neon-orange: #fbbf24;
             --neon-purple: #a78bfa;
         }
-        
-        * {
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
-
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: var(--bg-color);
             background: radial-gradient(circle at 50% -20%, #1e1b4b 0%, #000000 70%) fixed;
             color: var(--text-main);
-            margin: 0;
-            padding: 50px 16px 30px 16px;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
+            margin: 0; padding: 50px 16px 30px; min-height: 100vh;
+            display: flex; justify-content: center;
         }
-
-        .app-container {
-            width: 100%;
-            max-width: 420px;
-        }
-
+        .app-container { width: 100%; max-width: 420px; }
         .screen { display: none; }
         .screen.active { display: block; }
-
-        /* --- STYLE LIQUID GLASS --- */
         .glass-card {
             background: var(--glass-bg);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: var(--glass-border);
-            border-radius: 16px;
-            padding: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            margin-bottom: 16px;
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: var(--glass-border); border-radius: 16px; padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); margin-bottom: 16px;
         }
+        h1 { font-size: 22px; font-weight: 700; text-align: center; letter-spacing: .5px; margin: 0 0 4px; }
+        .subtitle { font-size: 12px; color: var(--text-muted); text-align: center; margin-bottom: 24px; }
+        .section-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; color: var(--text-muted); margin-bottom: 14px; }
 
-        h1 {
-            font-size: 22px;
-            font-weight: 700;
-            text-align: center;
-            letter-spacing: 0.5px;
-            margin: 0 0 4px 0;
-        }
-
-        .subtitle {
-            font-size: 12px;
-            color: var(--text-muted);
-            text-align: center;
-            margin-bottom: 24px;
-        }
-
-        .section-title {
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-weight: 700;
-            color: var(--text-muted);
-            margin-bottom: 14px;
-        }
-
-        /* --- NAVIGATION CAPSULE (TABS) --- */
+        /* NAV */
         .navigation-capsule {
-            display: flex;
-            background: rgba(15, 23, 42, 0.8);
-            border: var(--glass-border);
-            border-radius: 30px;
-            padding: 4px;
-            margin-bottom: 20px;
+            display: flex; background: rgba(15,23,42,0.8); border: var(--glass-border);
+            border-radius: 30px; padding: 4px; margin-bottom: 20px;
         }
+        .nav-btn { flex: 1; background: transparent; border: none; color: var(--text-muted); padding: 10px; font-size: 13px; font-weight: 600; border-radius: 25px; cursor: pointer; transition: all .2s; }
+        .nav-btn.active { background: rgba(255,255,255,.12); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); color: var(--text-main); }
 
-        .nav-btn {
-            flex: 1;
-            background: transparent;
-            border: none;
-            color: var(--text-muted);
-            padding: 10px;
-            font-size: 13px;
-            font-weight: 600;
-            border-radius: 25px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .nav-btn.active {
-            background: rgba(255, 255, 255, 0.12);
-            backdrop-filter: blur(5px);
-            -webkit-backdrop-filter: blur(5px);
-            color: var(--text-main);
-        }
-
-        /* --- INPUTS & FORM --- */
+        /* FORM */
         .form-group { margin-bottom: 16px; }
-        .form-group label {
-            display: block;
-            font-size: 11px;
-            color: var(--text-muted);
-            margin-bottom: 6px;
-            letter-spacing: 0.5px;
-        }
+        .form-group label { display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 6px; letter-spacing: .5px; }
+        input { width: 100%; background: var(--input-bg); border: 1px solid transparent; border-radius: 10px; padding: 12px; color: var(--text-main); font-size: 14px; }
+        input:focus { outline: none; border-color: var(--neon-blue); box-shadow: 0 0 10px rgba(56,189,248,.25); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+        .btn { width: 100%; background: linear-gradient(135deg, #0ea5e9 0%, #38bdf8 100%); border: none; border-radius: 12px; padding: 14px; color: #fff; font-size: 15px; font-weight: 600; cursor: pointer; }
+        .btn-secondary { background: transparent; border: var(--glass-border); color: var(--text-muted); font-size: 12px; padding: 10px; border-radius: 10px; width: 100%; }
+        .error-msg { color: var(--neon-red); font-size: 12px; text-align: center; margin-top: 10px; display: none; }
 
-        input {
-            width: 100%;
-            background: var(--input-bg);
-            border: 1px solid transparent;
-            border-radius: 10px;
-            padding: 12px;
-            color: var(--text-main);
-            font-size: 14px;
-        }
-
-        input:focus {
-            outline: none;
-            border-color: var(--neon-blue);
-            box-shadow: 0 0 10px rgba(56, 189, 248, 0.25);
-        }
-
-        .btn {
-            width: 100%;
-            background: linear-gradient(135deg, #0ea5e9 0%, #38bdf8 100%);
-            border: none;
-            border-radius: 12px;
-            padding: 14px;
-            color: white;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        .btn-secondary {
-            background: transparent;
-            border: var(--glass-border);
-            color: var(--text-muted);
-            font-size: 12px;
-            padding: 10px;
-            border-radius: 10px;
-            width: 100%;
-        }
-
-        /* --- LIVE KPI GRID --- */
-        .kpi-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-        }
-
-        .kpi-box {
-            background: rgba(30, 41, 59, 0.3);
-            border: var(--glass-border);
-            border-radius: 12px;
-            padding: 16px;
-        }
-
+        /* KPI GRID */
+        .kpi-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .kpi-box { background: rgba(30,41,59,.3); border: var(--glass-border); border-radius: 12px; padding: 16px; }
         .kpi-box.full { grid-column: span 2; }
         .kpi-val { font-size: 26px; font-weight: 700; margin-top: 4px; }
-        
-        .color-temp     { color: var(--neon-green); }
+        .color-temp { color: var(--neon-green); }
         .color-humidity { color: var(--neon-blue); }
-        .color-wind     { color: var(--neon-orange); }
-        .color-rain     { color: var(--neon-purple); }
+        .color-wind { color: var(--neon-orange); }
 
-        /* --- COMPASS --- */
-        .compass-wrap {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 12px;
+        /* SUN BAR */
+        .sun-bar {
+            grid-column: span 2;
+            display: flex; align-items: center; gap: 10px;
+            padding: 12px 14px;
+            background: rgba(251,191,36,.06);
+            border: 1px solid rgba(251,191,36,.15);
+            border-radius: 12px;
         }
+        .sun-item { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 46px; }
+        .sun-label { font-size: 10px; color: var(--text-muted); }
+        .sun-time { font-size: 15px; font-weight: 700; color: var(--neon-orange); }
+        .sun-progress-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+        .sun-progress-bar { width: 100%; height: 4px; background: rgba(255,255,255,.08); border-radius: 2px; overflow: hidden; }
+        .sun-progress-fill { height: 100%; border-radius: 2px; background: linear-gradient(to right, #fbbf24, #f97316); }
+        .sun-progress-label { font-size: 10px; color: var(--text-muted); }
 
-        .compass-meta {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            width: 100%;
-            font-size: 12px;
-            color: var(--text-muted);
-            line-height: 1.6;
-        }
+        /* CONDITION */
+        .condition-box { display: flex; align-items: center; gap: 12px; margin-top: 4px; }
+        .condition-icon { font-size: 28px; line-height: 1; }
+        .condition-label { font-size: 16px; font-weight: 700; }
 
-        .compass-meta strong {
-            display: block;
-            font-size: 17px;
-            font-weight: 700;
-        }
+        /* COMPASS */
+        .compass-wrap { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+        .compass-meta { display: flex; justify-content: space-between; align-items: flex-start; width: 100%; font-size: 12px; color: var(--text-muted); line-height: 1.6; }
+        .compass-meta strong { display: block; font-size: 17px; font-weight: 700; }
+        .compass-meta .meta-center { text-align: center; }
+        .compass-meta .meta-right { text-align: right; }
 
-        .compass-meta .meta-center {
-            text-align: center;
-        }
+        /* WIND TREND */
+        .wind-trend-row { display: flex; justify-content: space-around; align-items: flex-start; margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,.05); }
+        .wind-trend-item { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .wind-trend-time { font-size: 10px; color: var(--text-muted); }
+        .wind-trend-dir { font-size: 11px; font-weight: 600; color: var(--neon-blue); }
+        .mini-compass-canvas { width: 52px; height: 52px; display: block; }
 
-        .compass-meta .meta-right {
-            text-align: right;
-        }
+        /* PRÉCIPITATIONS */
+        .rain-top { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+        .rain-top-item { display: flex; flex-direction: column; gap: 3px; }
+        .rain-top-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; }
+        .rain-top-val { font-size: 24px; font-weight: 700; color: var(--neon-purple); line-height: 1.2; }
+        .rain-top-unit { font-size: 11px; font-weight: 400; color: var(--text-muted); }
+        .rain-divider { height: 1px; background: rgba(255,255,255,.06); margin-bottom: 14px; }
+        .rain-cumul-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(68px,1fr)); gap: 8px; }
+        .rain-cumul-item { display: flex; flex-direction: column; gap: 3px; }
+        .rain-cumul-label { font-size: 9px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .3px; }
+        .rain-cumul-val { font-size: 15px; font-weight: 700; color: var(--neon-purple); line-height: 1.2; }
+        .rain-cumul-unit { font-size: 9px; font-weight: 400; color: var(--text-muted); }
+        .rain-delta { font-size: 9px; line-height: 1.4; }
 
-        /* --- PRÉCIPITATIONS GRID --- */
-        .rain-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-top: 10px;
-        }
+        /* PRESSION */
+        .pressure-row { display: flex; align-items: center; justify-content: space-between; }
+        .pressure-trend-box { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+        .pressure-arrow { font-size: 26px; font-weight: 700; line-height: 1; }
+        .pressure-trend-label { font-size: 10px; color: var(--text-muted); }
 
-        .rain-cell {
-            display: flex;
-            flex-direction: column;
-            gap: 3px;
-        }
-
-        .rain-label {
-            font-size: 10px;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .rain-val {
-            font-size: 17px;
-            font-weight: 700;
-            color: var(--neon-purple);
-        }
-
-        /* --- GRAPHICS CONTAINER --- */
-        .chart-container {
-            position: relative;
-            margin-bottom: 25px;
-            height: 220px;
-            width: 100%;
-        }
-
-        .error-msg { color: var(--neon-red); font-size: 12px; text-align: center; margin-top: 10px; display: none; }
-        
-        /* --- CONSOLE DEBUG --- */
-        .debug-console {
-            font-family: monospace;
-            font-size: 11px;
-            padding: 12px;
-            border-radius: 10px;
-            margin-top: 15px;
-            background: rgba(0,0,0,0.4);
-            border: 1px solid rgba(255,255,255,0.05);
-            color: var(--text-muted);
-            word-break: break-all;
-        }
+        /* CHARTS */
+        .chart-container { position: relative; height: 220px; width: 100%; margin-bottom: 25px; }
+        .debug-console { font-family: monospace; font-size: 11px; padding: 12px; border-radius: 10px; margin-top: 15px; background: rgba(0,0,0,.4); border: 1px solid rgba(255,255,255,.05); color: var(--text-muted); word-break: break-all; }
     </style>
 </head>
 <body>
+<div class="app-container">
 
-    <div class="app-container">
-
-        <div id="login-screen" class="screen glass-card">
-            <h1>STATION MÉTÉO</h1>
-            <div class="subtitle">Configuration Premium Liquid Glass</div>
-            <div class="form-group"><label>APPLICATION KEY</label><input type="text" id="app-key"></div>
-            <div class="form-group"><label>API KEY</label><input type="password" id="api-key"></div>
-            <div class="form-group"><label>ADRESSE MAC</label><input type="text" id="mac-addr" placeholder="AA:BB:CC:DD:EE:FF"></div>
-            <button class="btn" onclick="tryLogin()">Enregistrer & Se connecter</button>
-            <div id="login-error" class="error-msg">Identifiants invalides ou erreur réseau.</div>
+    <!-- ═══ LOGIN ═══ -->
+    <div id="login-screen" class="screen glass-card">
+        <h1>STATION MÉTÉO</h1>
+        <div class="subtitle">Configuration Premium Liquid Glass</div>
+        <div class="form-group"><label>APPLICATION KEY</label><input type="text" id="app-key"></div>
+        <div class="form-group"><label>API KEY</label><input type="password" id="api-key"></div>
+        <div class="form-group"><label>ADRESSE MAC</label><input type="text" id="mac-addr" placeholder="AA:BB:CC:DD:EE:FF"></div>
+        <div class="form-row">
+            <div class="form-group" style="margin:0"><label>LATITUDE</label><input type="number" step="0.00001" id="lat-input" value="44.56622"></div>
+            <div class="form-group" style="margin:0"><label>LONGITUDE</label><input type="number" step="0.00001" id="lon-input" value="4.73546"></div>
         </div>
-
-        <div id="dashboard-screen" class="screen">
-            
-            <div class="navigation-capsule">
-                <button class="nav-btn active" id="tab-live" onclick="switchSubTab('live')">Temps Réel</button>
-                <button class="nav-btn" id="tab-charts" onclick="switchSubTab('charts')">Analyses & Graphiques</button>
-            </div>
-
-            <div id="subview-live" class="subview">
-                <div class="glass-card">
-                    <h1 style="text-align: left; font-size: 20px;" id="station-title">Ma Station</h1>
-                    <div id="sync-time" style="font-size: 11px; color: var(--text-muted); margin-bottom: 20px;">Actualisation...</div>
-                    <div class="section-title">Indicateurs clés</div>
-                    <div class="kpi-grid" id="weather-live-grid"></div>
-                    <button class="btn" style="margin-top: 20px;" onclick="refreshLive()">Actualiser</button>
-                </div>
-            </div>
-
-            <div id="subview-charts" class="subview" style="display: none;">
-                <div class="navigation-capsule" style="background: rgba(30, 41, 59, 0.4); margin-bottom: 16px;">
-                    <button class="nav-btn active" id="range-24h" onclick="changeRange('24h')">24H</button>
-                    <button class="nav-btn" id="range-7j" onclick="changeRange('7j')">7 Jours</button>
-                    <button class="nav-btn" id="range-30j" onclick="changeRange('30j')">30 Jours</button>
-                </div>
-
-                <div class="glass-card">
-                    <div class="section-title">Évolution Température (°C)</div>
-                    <div class="chart-container"><canvas id="tempChart"></canvas></div>
-
-                    <div class="section-title">Humidité (%)</div>
-                    <div class="chart-container"><canvas id="humidityChart"></canvas></div>
-
-                    <div class="section-title">Précipitations cumulées (mm)</div>
-                    <div class="chart-container"><canvas id="rainChart"></canvas></div>
-
-                    <div class="section-title">Vents & Rafales (km/h)</div>
-                    <div class="chart-container"><canvas id="windChart"></canvas></div>
-                    
-                    <div id="api-debug-log" class="debug-console">Statut API : En attente...</div>
-                </div>
-            </div>
-
-            <button class="btn btn-secondary" style="margin-top: 10px;" onclick="logout()">Déconnexion</button>
-        </div>
-
+        <button class="btn" onclick="tryLogin()">Enregistrer & Se connecter</button>
+        <div id="login-error" class="error-msg"></div>
     </div>
 
-    <script>
-        let currentRange = '24h';
-        let charts = {};
-        let historyCache = {};
-        let autoRefreshTimer = null;
+    <!-- ═══ DASHBOARD ═══ -->
+    <div id="dashboard-screen" class="screen">
+        <div class="navigation-capsule">
+            <button class="nav-btn active" id="tab-live" onclick="switchSubTab('live')">Temps Réel</button>
+            <button class="nav-btn" id="tab-charts" onclick="switchSubTab('charts')">Analyses & Graphiques</button>
+        </div>
 
-        document.addEventListener("DOMContentLoaded", () => {
-            if (localStorage.getItem("ecowitt_app_key")) {
-                showScreen("dashboard-screen");
-                refreshLive();
-                startAutoRefresh();
-            } else {
-                showScreen("login-screen");
-            }
+        <div id="subview-live">
+            <div class="glass-card">
+                <h1 style="text-align:left;font-size:20px">Ma Station</h1>
+                <div id="sync-time" style="font-size:11px;color:var(--text-muted);margin-bottom:20px">Actualisation...</div>
+                <div class="section-title">Indicateurs clés</div>
+                <div class="kpi-grid" id="weather-live-grid"></div>
+                <button class="btn" style="margin-top:20px" onclick="refreshLive()">Actualiser</button>
+            </div>
+        </div>
+
+        <div id="subview-charts" style="display:none">
+            <div class="navigation-capsule" style="background:rgba(30,41,59,.4);margin-bottom:16px">
+                <button class="nav-btn active" id="range-24h" onclick="changeRange('24h')">24H</button>
+                <button class="nav-btn" id="range-7j"  onclick="changeRange('7j')">7 Jours</button>
+                <button class="nav-btn" id="range-30j" onclick="changeRange('30j')">30 Jours</button>
+            </div>
+            <div class="glass-card">
+                <div class="section-title">Évolution Température (°C)</div>
+                <div class="chart-container"><canvas id="tempChart"></canvas></div>
+                <div class="section-title">Humidité (%)</div>
+                <div class="chart-container"><canvas id="humidityChart"></canvas></div>
+                <div class="section-title">Précipitations cumulées (mm)</div>
+                <div class="chart-container"><canvas id="rainChart"></canvas></div>
+                <div class="section-title">Vents & Rafales (km/h)</div>
+                <div class="chart-container"><canvas id="windChart"></canvas></div>
+                <div id="api-debug-log" class="debug-console">Statut API : En attente...</div>
+            </div>
+        </div>
+
+        <button class="btn btn-secondary" style="margin-top:10px" onclick="logout()">Déconnexion</button>
+    </div>
+
+</div>
+<script>
+/* ════════════════════════════════════════
+   STATE
+════════════════════════════════════════ */
+let currentRange = '24h';
+let charts = {};
+let historyCache = {};
+let lyRainCache = null;
+let autoRefreshTimer = null;
+
+/* ════════════════════════════════════════
+   INIT
+════════════════════════════════════════ */
+document.addEventListener("DOMContentLoaded", () => {
+    // Pre-fill GPS from storage if available
+    const sLat = localStorage.getItem("ecowitt_lat");
+    const sLon = localStorage.getItem("ecowitt_lon");
+    if (sLat) document.getElementById("lat-input").value = sLat;
+    if (sLon) document.getElementById("lon-input").value = sLon;
+
+    if (localStorage.getItem("ecowitt_app_key")) {
+        showScreen("dashboard-screen");
+        refreshLive();
+        startAutoRefresh();
+    } else {
+        showScreen("login-screen");
+    }
+});
+
+/* ════════════════════════════════════════
+   NAVIGATION
+════════════════════════════════════════ */
+function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+}
+function switchSubTab(tab) {
+    document.getElementById('tab-live').classList.toggle('active', tab === 'live');
+    document.getElementById('tab-charts').classList.toggle('active', tab === 'charts');
+    document.getElementById('subview-live').style.display  = tab === 'live'   ? 'block' : 'none';
+    document.getElementById('subview-charts').style.display = tab === 'charts' ? 'block' : 'none';
+    if (tab === 'charts') loadHistoryData();
+}
+function changeRange(range) {
+    ['24h','7j','30j'].forEach(r => document.getElementById(`range-${r}`).classList.toggle('active', r === range));
+    currentRange = range;
+    loadHistoryData();
+}
+function startAutoRefresh() {
+    clearInterval(autoRefreshTimer);
+    autoRefreshTimer = setInterval(() => {
+        if (document.getElementById('tab-live').classList.contains('active')) refreshLive();
+    }, 5 * 60 * 1000);
+}
+
+/* ════════════════════════════════════════
+   AUTH
+════════════════════════════════════════ */
+async function tryLogin() {
+    const appKey = document.getElementById("app-key").value.trim();
+    const apiKey = document.getElementById("api-key").value.trim();
+    const mac    = document.getElementById("mac-addr").value.trim();
+    const lat    = parseFloat(document.getElementById("lat-input").value);
+    const lon    = parseFloat(document.getElementById("lon-input").value);
+    const errEl  = document.getElementById("login-error");
+    errEl.style.display = "none";
+    try {
+        const ok = await fetchLiveData(appKey, apiKey, mac);
+        if (ok) {
+            localStorage.setItem("ecowitt_app_key", appKey);
+            localStorage.setItem("ecowitt_api_key", apiKey);
+            localStorage.setItem("ecowitt_mac",     mac);
+            localStorage.setItem("ecowitt_lat",     lat);
+            localStorage.setItem("ecowitt_lon",     lon);
+            showScreen("dashboard-screen");
+            refreshLive();
+            startAutoRefresh();
+        } else {
+            errEl.innerText = "Clés invalides — vérifie ton Application Key et API Key.";
+            errEl.style.display = "block";
+        }
+    } catch {
+        errEl.innerText = "Erreur réseau — vérifie ta connexion.";
+        errEl.style.display = "block";
+    }
+}
+function logout() {
+    clearInterval(autoRefreshTimer);
+    historyCache = {}; lyRainCache = null;
+    localStorage.clear();
+    showScreen("login-screen");
+}
+
+/* ════════════════════════════════════════
+   CREDENTIALS
+════════════════════════════════════════ */
+function getCreds() {
+    return {
+        appKey: localStorage.getItem("ecowitt_app_key"),
+        apiKey: localStorage.getItem("ecowitt_api_key"),
+        mac:    localStorage.getItem("ecowitt_mac"),
+        lat:    parseFloat(localStorage.getItem("ecowitt_lat")) || 44.56622,
+        lon:    parseFloat(localStorage.getItem("ecowitt_lon")) || 4.73546,
+    };
+}
+function fmtDate(d) {
+    const p = n => String(n).padStart(2,'0');
+    return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+}
+
+/* ════════════════════════════════════════
+   API FETCHES
+════════════════════════════════════════ */
+async function fetchLiveData(appKey, apiKey, mac) {
+    const url = `https://api.ecowitt.net/api/v3/device/real_time?application_key=${appKey}&api_key=${apiKey}&mac=${mac}&call_back=all&temp_unitid=1&wind_speed_unitid=7&rainfall_unitid=12&pressure_unitid=3`;
+    const r = await fetch(url);
+    const j = await r.json();
+    return (j.code === 0 && j.data) ? j.data : false;
+}
+
+async function fetchRecentTrend(appKey, apiKey, mac) {
+    const now   = new Date();
+    const start = new Date(now.getTime() - 3 * 3600 * 1000);
+    const url = `https://api.ecowitt.net/api/v3/device/history?application_key=${appKey}&api_key=${apiKey}&mac=${mac}&start_date=${encodeURIComponent(fmtDate(start))}&end_date=${encodeURIComponent(fmtDate(now))}&cycle=1800&call_back=wind.wind_direction,pressure.relative&pressure_unitid=3`;
+    const r = await fetch(url);
+    const j = await r.json();
+    return (j.code === 0 && j.data) ? j.data : null;
+}
+
+async function fetchLastYearRain(appKey, apiKey, mac) {
+    if (lyRainCache) return lyRainCache;
+    const now  = new Date();
+    const endLY   = new Date(now); endLY.setFullYear(now.getFullYear() - 1);
+    const startLY = new Date(endLY.getFullYear(), 0, 1);
+    const url = `https://api.ecowitt.net/api/v3/device/history?application_key=${appKey}&api_key=${apiKey}&mac=${mac}&start_date=${encodeURIComponent(fmtDate(startLY))}&end_date=${encodeURIComponent(fmtDate(endLY))}&cycle=86400&call_back=rainfall.daily&rainfall_unitid=12`;
+    const r = await fetch(url);
+    const j = await r.json();
+    if (j.code !== 0 || !j.data) return null;
+    lyRainCache = computeNM1(j.data, now);
+    return lyRainCache;
+}
+
+async function refreshLive() {
+    const { appKey, apiKey, mac } = getCreds();
+    const [liveRes, trendRes, nm1Res] = await Promise.allSettled([
+        fetchLiveData(appKey, apiKey, mac),
+        fetchRecentTrend(appKey, apiKey, mac),
+        fetchLastYearRain(appKey, apiKey, mac),
+    ]);
+    const liveData = (liveRes.status  === 'fulfilled' && liveRes.value  !== false) ? liveRes.value  : null;
+    const trend    = (trendRes.status === 'fulfilled') ? trendRes.value : null;
+    const nm1      = (nm1Res.status   === 'fulfilled') ? nm1Res.value   : null;
+    if (liveData) renderLiveGrid(liveData, trend, nm1);
+}
+
+/* ════════════════════════════════════════
+   CALCULATIONS
+════════════════════════════════════════ */
+function getSunTimes(lat, lon) {
+    const D2R = Math.PI / 180, R2D = 180 / Math.PI;
+    const now = new Date();
+    const N   = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000);
+    const lh  = lon / 15;
+    function calc(isRise) {
+        const t  = isRise ? N + (6 - lh) / 24 : N + (18 - lh) / 24;
+        const M  = (0.9856 * t - 3.289) * D2R;
+        let   L  = M * R2D + 1.916 * Math.sin(M) + 0.020 * Math.sin(2 * M) + 282.634;
+        L = ((L % 360) + 360) % 360;
+        const Lr = L * D2R;
+        const sd = 0.39782 * Math.sin(Lr);
+        const cd = Math.cos(Math.asin(sd));
+        const ch = (Math.cos(90.833 * D2R) - sd * Math.sin(lat * D2R)) / (cd * Math.cos(lat * D2R));
+        if (ch > 1 || ch < -1) return null;
+        const H  = isRise ? (360 - Math.acos(ch) * R2D) / 15 : Math.acos(ch) * R2D / 15;
+        const RA = Math.atan2(0.91764 * Math.sin(Lr), Math.cos(Lr)) * R2D;
+        const Lq = Math.floor(L / 90) * 90;
+        const Rq = Math.floor(RA / 90) * 90;
+        const T  = H + (RA + Lq - Rq) / 15 - 0.06571 * t - 6.622;
+        const UT = ((T - lh) % 24 + 24) % 24;
+        const lo = ((UT - now.getTimezoneOffset() / 60) % 24 + 24) % 24;
+        const hh = Math.floor(lo), mm = Math.round((lo - hh) * 60);
+        return `${String(hh).padStart(2,'0')}:${String(mm >= 60 ? mm - 60 : mm).padStart(2,'0')}`;
+    }
+    return { sunrise: calc(true), sunset: calc(false) };
+}
+
+function sunProgress(times) {
+    if (!times?.sunrise || !times?.sunset) return 0;
+    const toM = s => { const [h,m] = s.split(':').map(Number); return h*60+m; };
+    const now = new Date(), nowM = now.getHours() * 60 + now.getMinutes();
+    const r = toM(times.sunrise), s = toM(times.sunset);
+    if (nowM <= r) return 0;
+    if (nowM >= s) return 100;
+    return Math.round((nowM - r) / (s - r) * 100);
+}
+
+function getFeelsLike(temp, humid, wind) {
+    if (temp <= 10 && wind >= 4.8) {
+        const v = Math.pow(wind, 0.16);
+        return Math.round((13.12 + 0.6215*temp - 11.37*v + 0.3965*temp*v) * 10) / 10;
+    }
+    if (temp >= 27 && humid >= 40) {
+        const T = temp * 9/5 + 32, H = humid;
+        const HI = -42.379 + 2.04901523*T + 10.14333127*H - 0.22475541*T*H
+                   - 0.00683783*T*T - 0.05481717*H*H + 0.00122874*T*T*H
+                   + 0.00085282*T*H*H - 0.00000199*T*T*H*H;
+        return Math.round(((HI - 32) * 5/9) * 10) / 10;
+    }
+    return null;
+}
+
+function getCondition(data) {
+    const temp  = parseFloat(data.outdoor?.temperature?.value) || 0;
+    const humid = parseFloat(data.outdoor?.humidity?.value)    || 0;
+    const wind  = parseFloat(data.wind?.wind_speed?.value)     || 0;
+    const rainH = parseFloat(data.rainfall?.hourly?.value)     || 0;
+    if (rainH > 5)   return { icon: '⛈️', label: 'Pluie forte',    color: '#38bdf8' };
+    if (rainH > 0.3) return { icon: '🌧️', label: 'Pluie en cours', color: '#38bdf8' };
+    if (rainH > 0)   return { icon: '🌦️', label: 'Pluie légère',   color: '#38bdf8' };
+    if (wind  > 60)  return { icon: '🌀', label: 'Vent très fort',  color: '#f43f5e' };
+    if (wind  > 30)  return { icon: '💨', label: 'Venteux',         color: '#fbbf24' };
+    if (temp  > 35)  return { icon: '🌡️', label: 'Très chaud',     color: '#f43f5e' };
+    if (temp  > 25)  return { icon: '☀️', label: 'Chaud',           color: '#fbbf24' };
+    if (temp  < 0)   return { icon: '❄️', label: 'Gel',             color: '#38bdf8' };
+    if (humid > 90)  return { icon: '🌫️', label: 'Brumeux',        color: '#94a3b8' };
+    if (humid > 70)  return { icon: '⛅', label: 'Nuageux',         color: '#94a3b8' };
+    return { icon: '🌤️', label: 'Beau temps', color: '#4ade80' };
+}
+
+function getPressureTrend(trend) {
+    const list = trend?.pressure?.relative?.list || {};
+    const vals = Object.keys(list).sort((a,b) => a-b).map(k => parseFloat(list[k]));
+    if (vals.length < 2) return null;
+    const delta = vals[vals.length-1] - vals[0];
+    if (delta >  1) return { arrow: '↑', label: 'En hausse', color: 'var(--neon-green)' };
+    if (delta < -1) return { arrow: '↓', label: 'En baisse', color: 'var(--neon-red)'   };
+    return { arrow: '→', label: 'Stable', color: 'var(--text-muted)' };
+}
+
+function computeNM1(data, now) {
+    const list = data.rainfall?.daily?.list || {};
+    if (!Object.keys(list).length) return null;
+    const ly    = now.getFullYear() - 1;
+    const lyEnd = new Date(now); lyEnd.setFullYear(ly);
+    const lyMon = lyEnd.getMonth(), lyDay = lyEnd.getDate();
+    const dow   = lyEnd.getDay() || 7;
+    const wkSt  = new Date(lyEnd); wkSt.setDate(lyDay - dow + 1); wkSt.setHours(0,0,0,0);
+    let daily = null, weekly = 0, monthly = 0, yearly = 0;
+    let hasW = false, hasM = false, hasY = false;
+    for (const ts of Object.keys(list)) {
+        const d = new Date(parseInt(ts) * 1000);
+        if (d.getFullYear() !== ly) continue;
+        const v = parseFloat(list[ts]) || 0;
+        if (d.getMonth() === lyMon && d.getDate() === lyDay) daily = v;
+        if (d >= wkSt && d <= lyEnd) { weekly += v; hasW = true; }
+        if (d.getMonth() === lyMon)  { monthly += v; hasM = true; }
+        if (d <= lyEnd)              { yearly  += v; hasY = true; }
+    }
+    return {
+        daily:   daily  !== null ? Math.round(daily  * 10)/10 : null,
+        weekly:  hasW   ? Math.round(weekly  * 10)/10 : null,
+        monthly: hasM   ? Math.round(monthly * 10)/10 : null,
+        yearly:  hasY   ? Math.round(yearly  * 10)/10 : null,
+    };
+}
+
+function deltaHtml(current, ly) {
+    if (ly == null || current == null) return '';
+    const d = Math.round((parseFloat(current) - ly) * 10) / 10;
+    const color = d >= 0 ? 'var(--neon-green)' : 'var(--neon-red)';
+    return `<div class="rain-delta" style="color:${color}">${d >= 0 ? '▲' : '▼'} ${d >= 0 ? '+' : ''}${d} mm<br><span style="color:var(--text-muted)">vs N−1</span></div>`;
+}
+
+const DIRS16 = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSO','SO','OSO','O','ONO','NO','NNO'];
+function toCardinal(deg) { return DIRS16[Math.round(deg / 22.5) % 16]; }
+
+/* ════════════════════════════════════════
+   COMPASS CANVAS
+════════════════════════════════════════ */
+function drawCompass(canvas, degrees, size) {
+    canvas.width = canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    const cx = size/2, cy = size/2, r = size * 0.42;
+    const mini = size < 80;
+    ctx.clearRect(0, 0, size, size);
+
+    // Background
+    ctx.beginPath(); ctx.arc(cx, cy, r + size*0.04, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(15,23,42,0.75)'; ctx.fill();
+
+    // Ticks (large compass only)
+    if (!mini) {
+        for (let i = 0; i < 36; i++) {
+            const a = (i*10 - 90) * Math.PI/180, maj = i%9 === 0;
+            ctx.beginPath();
+            ctx.moveTo(cx + Math.cos(a)*(r-2),    cy + Math.sin(a)*(r-2));
+            ctx.lineTo(cx + Math.cos(a)*(r-(maj?10:5)), cy + Math.sin(a)*(r-(maj?10:5)));
+            ctx.strokeStyle = maj ? 'rgba(255,255,255,.35)' : 'rgba(255,255,255,.1)';
+            ctx.lineWidth = maj ? 1.5 : 0.8; ctx.stroke();
+        }
+    }
+
+    // Neon ring
+    ctx.shadowBlur = mini ? 8 : 16; ctx.shadowColor = '#38bdf8';
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2);
+    ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = mini ? 1 : 1.5; ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Cardinal labels (large only)
+    if (!mini) {
+        [['N',-90],['E',0],['S',90],['O',180]].forEach(([l,a]) => {
+            const rad = a * Math.PI/180;
+            ctx.fillStyle = l === 'N' ? '#38bdf8' : 'rgba(255,255,255,.5)';
+            ctx.font = '700 11px -apple-system,sans-serif';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText(l, cx + Math.cos(rad)*(r-16), cy + Math.sin(rad)*(r-16));
         });
+    }
 
-        function showScreen(id) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
+    // Arrow
+    const rad = (degrees - 90) * Math.PI/180;
+    const aLen = r - (mini ? 8 : 24);
+    const tx = cx + Math.cos(rad)*aLen, ty = cy + Math.sin(rad)*aLen;
+    const bx = cx - Math.cos(rad)*aLen*(mini?.35:.45), by = cy - Math.sin(rad)*aLen*(mini?.35:.45);
+    const px = -Math.sin(rad)*(mini?3:5), py = Math.cos(rad)*(mini?3:5), ah = mini?7:13;
+
+    ctx.shadowBlur = mini ? 6 : 12; ctx.shadowColor = '#fbbf24';
+    ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(tx, ty);
+    ctx.strokeStyle = 'rgba(251,191,36,.6)'; ctx.lineWidth = mini ? 1.5 : 2;
+    ctx.lineCap = 'round'; ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(tx, ty);
+    ctx.lineTo(tx - Math.cos(rad)*ah + px, ty - Math.sin(rad)*ah + py);
+    ctx.lineTo(tx - Math.cos(rad)*ah - px, ty - Math.sin(rad)*ah - py);
+    ctx.closePath(); ctx.fillStyle = '#fbbf24'; ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Center dot
+    ctx.beginPath(); ctx.arc(cx, cy, mini?2:3, 0, Math.PI*2);
+    ctx.fillStyle = 'rgba(255,255,255,.3)'; ctx.fill();
+
+    // Degrees + cardinal (large only)
+    if (!mini) {
+        ctx.fillStyle = '#f3f4f6'; ctx.font = '700 19px -apple-system,sans-serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(`${degrees}°`, cx, cy - 8);
+        ctx.fillStyle = '#38bdf8'; ctx.font = '600 12px -apple-system,sans-serif';
+        ctx.fillText(toCardinal(degrees), cx, cy + 11);
+    }
+}
+
+/* ════════════════════════════════════════
+   RENDER LIVE GRID
+════════════════════════════════════════ */
+function renderLiveGrid(data, trend, nm1) {
+    const grid = document.getElementById("weather-live-grid");
+    const { lat, lon } = getCreds();
+
+    const temp      = parseFloat(data.outdoor?.temperature?.value);
+    const humid     = parseFloat(data.outdoor?.humidity?.value);
+    const windKmh   = parseFloat(data.wind?.wind_speed?.value)  || 0;
+    const windGust  = data.wind?.wind_gust?.value;
+    const windDeg   = parseInt(data.wind?.wind_direction?.value);
+    const pressure  = data.pressure?.relative?.value;
+    const rf        = data.rainfall;
+
+    const feelsLike = (!isNaN(temp) && !isNaN(humid)) ? getFeelsLike(temp, humid, windKmh) : null;
+    const condition = getCondition(data);
+    const sunTimes  = getSunTimes(lat, lon);
+    const pTrend    = getPressureTrend(trend);
+    const pct       = sunProgress(sunTimes);
+
+    // Wind trend points
+    const wdList = trend?.wind?.wind_direction?.list || {};
+    const trendPts = Object.keys(wdList).sort((a,b)=>Number(a)-Number(b)).slice(-4)
+        .map(ts => ({ t: new Date(ts*1000), deg: parseInt(wdList[ts]) }));
+
+    let h = '';
+
+    // ── LEVER / COUCHER
+    if (sunTimes?.sunrise) {
+        const label = pct === 0 ? 'Avant le lever' : pct === 100 ? 'Après le coucher' : `Journée : ${pct}%`;
+        h += `
+        <div class="sun-bar">
+            <div class="sun-item">
+                <span style="font-size:16px">🌅</span>
+                <span class="sun-time">${sunTimes.sunrise}</span>
+                <span class="sun-label">Lever</span>
+            </div>
+            <div class="sun-progress-wrap">
+                <div class="sun-progress-bar"><div class="sun-progress-fill" style="width:${pct}%"></div></div>
+                <span class="sun-progress-label">${label}</span>
+            </div>
+            <div class="sun-item">
+                <span style="font-size:16px">🌇</span>
+                <span class="sun-time">${sunTimes.sunset}</span>
+                <span class="sun-label">Coucher</span>
+            </div>
+        </div>`;
+    }
+
+    // ── TEMP + HUMIDITÉ
+    if (!isNaN(temp))  h += `<div class="kpi-box"><div class="section-title">Température</div><div class="kpi-val color-temp">${temp} °C</div></div>`;
+    if (!isNaN(humid)) h += `<div class="kpi-box"><div class="section-title">Humidité</div><div class="kpi-val color-humidity">${humid} %</div></div>`;
+
+    // ── RESSENTI + CONDITION
+    if (feelsLike !== null) {
+        h += `<div class="kpi-box"><div class="section-title">Ressenti</div><div class="kpi-val color-temp">${feelsLike} °C</div></div>`;
+    }
+    h += `<div class="kpi-box${feelsLike === null ? ' full' : ''}">
+        <div class="section-title">Conditions</div>
+        <div class="condition-box">
+            <span class="condition-icon">${condition.icon}</span>
+            <span class="condition-label" style="color:${condition.color}">${condition.label}</span>
+        </div>
+    </div>`;
+
+    // ── BOUSSOLE + TENDANCE VENT
+    if (!isNaN(windDeg)) {
+        const trendBlock = trendPts.length >= 2 ? `
+        <div class="wind-trend-row">
+            ${trendPts.map(p => `
+            <div class="wind-trend-item">
+                <canvas class="mini-compass-canvas" data-deg="${p.deg}"></canvas>
+                <span class="wind-trend-time">${String(p.t.getHours()).padStart(2,'0')}:${String(p.t.getMinutes()).padStart(2,'0')}</span>
+                <span class="wind-trend-dir">${toCardinal(p.deg)}</span>
+            </div>`).join('')}
+        </div>` : '';
+
+        h += `
+        <div class="kpi-box full">
+            <div class="section-title">Direction & Vitesse du vent</div>
+            <div class="compass-wrap">
+                <canvas id="compass-canvas"></canvas>
+                <div class="compass-meta">
+                    <div><span>Vent moyen</span><strong class="color-wind">${windKmh} <span style="font-size:11px;font-weight:400">km/h</span></strong></div>
+                    <div class="meta-center"><span>Direction</span><strong style="color:var(--neon-blue)">${windDeg}° ${toCardinal(windDeg)}</strong></div>
+                    <div class="meta-right"><span>Rafale</span><strong class="color-wind">${windGust ?? '—'} <span style="font-size:11px;font-weight:400">km/h</span></strong></div>
+                </div>
+            </div>
+            ${trendBlock}
+        </div>`;
+    }
+
+    // ── PRÉCIPITATIONS
+    if (rf) {
+        const hv = rf.hourly?.value, ev = rf.event?.value;
+        const dv = rf.daily?.value, wv = rf.weekly?.value, mv = rf.monthly?.value, yv = rf.yearly?.value;
+        const hasCumuls = [dv,wv,mv,yv].some(v => v !== undefined);
+
+        h += `<div class="kpi-box full"><div class="section-title">Précipitations</div>`;
+
+        if (hv !== undefined || ev !== undefined) {
+            h += `<div class="rain-top">
+                ${hv !== undefined ? `<div class="rain-top-item"><span class="rain-top-label">Taux horaire</span><span class="rain-top-val">${hv}<span class="rain-top-unit"> mm/h</span></span></div>` : ''}
+                ${ev !== undefined ? `<div class="rain-top-item"><span class="rain-top-label">Événement</span><span class="rain-top-val">${ev}<span class="rain-top-unit"> mm</span></span></div>` : ''}
+            </div>`;
         }
 
-        function switchSubTab(tab) {
-            document.getElementById('tab-live').classList.toggle('active', tab === 'live');
-            document.getElementById('tab-charts').classList.toggle('active', tab === 'charts');
-            document.getElementById('subview-live').style.display = tab === 'live' ? 'block' : 'none';
-            document.getElementById('subview-charts').style.display = tab === 'charts' ? 'block' : 'none';
-            if (tab === 'charts') loadHistoryData();
+        if (hasCumuls) {
+            if (hv !== undefined || ev !== undefined) h += `<div class="rain-divider"></div>`;
+            h += `<div class="rain-cumul-grid">
+                ${dv !== undefined ? `<div class="rain-cumul-item"><span class="rain-cumul-label">Quotidien</span><span class="rain-cumul-val">${dv}<span class="rain-cumul-unit"> mm</span></span>${deltaHtml(dv, nm1?.daily)}</div>` : ''}
+                ${wv !== undefined ? `<div class="rain-cumul-item"><span class="rain-cumul-label">Hebdo</span><span class="rain-cumul-val">${wv}<span class="rain-cumul-unit"> mm</span></span>${deltaHtml(wv, nm1?.weekly)}</div>` : ''}
+                ${mv !== undefined ? `<div class="rain-cumul-item"><span class="rain-cumul-label">Mensuel</span><span class="rain-cumul-val">${mv}<span class="rain-cumul-unit"> mm</span></span>${deltaHtml(mv, nm1?.monthly)}</div>` : ''}
+                ${yv !== undefined ? `<div class="rain-cumul-item"><span class="rain-cumul-label">Annuel</span><span class="rain-cumul-val">${yv}<span class="rain-cumul-unit"> mm</span></span>${deltaHtml(yv, nm1?.yearly)}</div>` : ''}
+            </div>`;
         }
+        h += `</div>`;
+    }
 
-        function changeRange(range) {
-            ['24h', '7j', '30j'].forEach(r => document.getElementById(`range-${r}`).classList.toggle('active', r === range));
-            currentRange = range;
-            loadHistoryData();
+    // ── PRESSION
+    if (pressure !== undefined) {
+        h += `
+        <div class="kpi-box full">
+            <div class="section-title">Pression Relative</div>
+            <div class="pressure-row">
+                <div class="kpi-val" style="color:var(--text-main)">${pressure} <span style="font-size:14px;font-weight:400">hPa</span></div>
+                ${pTrend ? `<div class="pressure-trend-box">
+                    <span class="pressure-arrow" style="color:${pTrend.color}">${pTrend.arrow}</span>
+                    <span class="pressure-trend-label">${pTrend.label}</span>
+                </div>` : ''}
+            </div>
+        </div>`;
+    }
+
+    grid.innerHTML = h;
+    document.getElementById("sync-time").innerText = `Mis à jour : ${new Date().toLocaleTimeString('fr-FR')}`;
+
+    // Draw compasses after DOM injection
+    if (!isNaN(windDeg)) {
+        const mc = document.getElementById('compass-canvas');
+        if (mc) drawCompass(mc, windDeg, 160);
+    }
+    document.querySelectorAll('.mini-compass-canvas').forEach(c => drawCompass(c, parseInt(c.dataset.deg), 52));
+}
+
+/* ════════════════════════════════════════
+   HISTORY CHARTS
+════════════════════════════════════════ */
+async function loadHistoryData() {
+    if (historyCache[currentRange]) { buildCharts(historyCache[currentRange]); return; }
+
+    const { appKey, apiKey, mac } = getCreds();
+    const log = document.getElementById("api-debug-log");
+    const now = new Date();
+    let start = new Date(now.getTime() - 24*3600*1000), cycle = "1800";
+    if (currentRange === '7j')  { start = new Date(now.getTime() - 7*24*3600*1000);  cycle = "14400"; }
+    if (currentRange === '30j') { start = new Date(now.getTime() - 30*24*3600*1000); cycle = "86400"; }
+
+    const url = `https://api.ecowitt.net/api/v3/device/history?application_key=${appKey}&api_key=${apiKey}&mac=${mac}&start_date=${encodeURIComponent(fmtDate(start))}&end_date=${encodeURIComponent(fmtDate(now))}&cycle=${cycle}&call_back=outdoor.temperature,outdoor.humidity,rainfall.daily,wind.wind_speed,wind.wind_gust&temp_unitid=1&wind_speed_unitid=7&rainfall_unitid=12`;
+
+    try {
+        log.style.color = 'var(--text-muted)'; log.innerText = 'Chargement des graphiques...';
+        const r = await fetch(url), j = await r.json();
+        if (j.code !== 0) { log.style.color='var(--neon-red)'; log.innerText=`Erreur API [${j.code}] : ${j.msg||'Vérifie tes paramètres'}`; return; }
+        if (!j.data || !Object.keys(j.data).length) { log.style.color='var(--neon-orange)'; log.innerText='Aucune donnée pour cette période.'; return; }
+        historyCache[currentRange] = j.data;
+        log.style.color = 'var(--neon-green)'; log.innerText = 'Données synchronisées ✓';
+        buildCharts(j.data);
+    } catch(e) {
+        log.style.color = 'var(--neon-red)'; log.innerText = `Erreur réseau : ${e.message}`;
+    }
+}
+
+function buildCharts(data) {
+    const tO = data.outdoor?.temperature?.list || {};
+    const hO = data.outdoor?.humidity?.list    || {};
+    const rO = data.rainfall?.daily?.list      || {};
+    const wO = data.wind?.wind_speed?.list     || {};
+    const gO = data.wind?.wind_gust?.list      || {};
+
+    const ts = Array.from(new Set([...Object.keys(tO),...Object.keys(hO),...Object.keys(rO),...Object.keys(wO),...Object.keys(gO)])).sort((a,b)=>Number(a)-Number(b));
+    if (!ts.length) return;
+
+    const mt = currentRange === '24h' ? 8 : (currentRange === '7j' ? 7 : 10);
+    const labels = ts.map(t => {
+        const d = new Date(t*1000);
+        return currentRange === '24h' ? `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}` : `${d.getDate()}/${d.getMonth()+1}`;
+    });
+    const base = {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+            x: { ticks: { color:'#94a3b8', font:{size:10}, maxTicksLimit:mt, maxRotation:0 }, grid:{display:false} },
+            y: { ticks: { color:'#94a3b8', font:{size:10} }, grid:{ color:'rgba(255,255,255,.04)' } }
         }
+    };
+    const grad = (ctx, top, bot) => {
+        const {chart} = ctx, {chartArea} = chart;
+        if (!chartArea) return top;
+        const g = chart.ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+        g.addColorStop(0, top); g.addColorStop(1, bot); return g;
+    };
+    const gradH = (ctx, l, r) => {
+        const {chart} = ctx, {chartArea} = chart;
+        if (!chartArea) return l;
+        const g = chart.ctx.createLinearGradient(chartArea.left, 0, chartArea.right, 0);
+        g.addColorStop(0,l); g.addColorStop(1,r); return g;
+    };
 
-        function startAutoRefresh() {
-            clearInterval(autoRefreshTimer);
-            autoRefreshTimer = setInterval(() => {
-                const activeTab = document.getElementById('tab-live').classList.contains('active');
-                if (activeTab) refreshLive();
-            }, 5 * 60 * 1000); // toutes les 5 min
-        }
+    initChart('tempChart','line',labels,[{
+        data: ts.map(t => tO[t]!==undefined ? parseFloat(tO[t]) : null),
+        borderWidth:2.5, tension:.35, pointRadius:0, spanGaps:true, fill:true,
+        borderColor: ctx => gradH(ctx,'#38bdf8','#4ade80'),
+        backgroundColor: ctx => grad(ctx,'rgba(56,189,248,.2)','rgba(0,0,0,0)'),
+    }], base);
 
-        async function tryLogin() {
-            const appKey = document.getElementById("app-key").value.trim();
-            const apiKey = document.getElementById("api-key").value.trim();
-            const mac    = document.getElementById("mac-addr").value.trim();
-            const errEl  = document.getElementById("login-error");
-            errEl.style.display = "none";
+    initChart('humidityChart','line',labels,[{
+        data: ts.map(t => hO[t]!==undefined ? parseFloat(hO[t]) : null),
+        borderWidth:2.5, borderColor:'#38bdf8', tension:.35, pointRadius:0, spanGaps:true, fill:true,
+        backgroundColor: ctx => grad(ctx,'rgba(56,189,248,.18)','rgba(0,0,0,0)'),
+    }], base);
 
-            try {
-                const success = await fetchLive(appKey, apiKey, mac);
-                if (success) {
-                    localStorage.setItem("ecowitt_app_key", appKey);
-                    localStorage.setItem("ecowitt_api_key", apiKey);
-                    localStorage.setItem("ecowitt_mac", mac);
-                    showScreen("dashboard-screen");
-                    startAutoRefresh();
-                } else {
-                    errEl.innerText = "Clés invalides — vérifie ton Application Key et API Key.";
-                    errEl.style.display = "block";
-                }
-            } catch {
-                errEl.innerText = "Erreur réseau — vérifie ta connexion.";
-                errEl.style.display = "block";
-            }
-        }
+    initChart('rainChart','bar',labels,[{
+        data: ts.map(t => rO[t]!==undefined ? parseFloat(rO[t]) : 0),
+        borderRadius:5, borderWidth:1.5, borderColor:'#a78bfa',
+        backgroundColor: ctx => grad(ctx,'rgba(167,139,250,.7)','rgba(167,139,250,.05)'),
+    }], base);
 
-        function refreshLive() {
-            fetchLive(
-                localStorage.getItem("ecowitt_app_key"),
-                localStorage.getItem("ecowitt_api_key"),
-                localStorage.getItem("ecowitt_mac")
-            );
-        }
+    const windOpts = { ...base, plugins:{ legend:{ display:true, labels:{ color:'#94a3b8', font:{size:11}, boxWidth:20, padding:12 } } } };
+    initChart('windChart','line',labels,[
+        { data:ts.map(t=>wO[t]!==undefined?parseFloat(wO[t]):null), label:'Moyen',   borderWidth:1.5, borderColor:'rgba(251,191,36,.45)', fill:false, tension:.35, pointRadius:0, spanGaps:true },
+        { data:ts.map(t=>gO[t]!==undefined?parseFloat(gO[t]):null), label:'Rafales', borderWidth:2.5, borderColor:'#fbbf24',              fill:false, tension:.35, pointRadius:0, spanGaps:true },
+    ], windOpts);
+}
 
-        async function fetchLive(appKey, apiKey, mac) {
-            const url = `https://api.ecowitt.net/api/v3/device/real_time?application_key=${appKey}&api_key=${apiKey}&mac=${mac}&call_back=all&temp_unitid=1&wind_speed_unitid=7&rainfall_unitid=12&pressure_unitid=3`;
-            const res  = await fetch(url);
-            const json = await res.json();
-            if (json.code === 0 && json.data) {
-                renderLiveGrid(json.data);
-                return true;
-            }
-            return false;
-        }
-
-        /* -------------------------------------------------
-           BOUSSOLE VENT
-        ------------------------------------------------- */
-        function drawCompass(canvas, degrees) {
-            const size = 160;
-            canvas.width = canvas.height = size;
-            const ctx = canvas.getContext('2d');
-            const cx = size / 2, cy = size / 2, r = 68;
-            ctx.clearRect(0, 0, size, size);
-
-            // Fond glass
-            ctx.beginPath();
-            ctx.arc(cx, cy, r + 6, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(15, 23, 42, 0.75)';
-            ctx.fill();
-
-            // Micro-ticks (tous les 10°)
-            for (let i = 0; i < 36; i++) {
-                const angle = (i * 10 - 90) * Math.PI / 180;
-                const isMajor = i % 9 === 0;
-                ctx.beginPath();
-                ctx.moveTo(cx + Math.cos(angle) * (r - 2), cy + Math.sin(angle) * (r - 2));
-                ctx.lineTo(cx + Math.cos(angle) * (r - (isMajor ? 10 : 5)), cy + Math.sin(angle) * (r - (isMajor ? 10 : 5)));
-                ctx.strokeStyle = isMajor ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.1)';
-                ctx.lineWidth = isMajor ? 1.5 : 0.8;
-                ctx.stroke();
-            }
-
-            // Anneau néon cyan avec glow
-            ctx.shadowBlur = 16;
-            ctx.shadowColor = '#38bdf8';
-            ctx.beginPath();
-            ctx.arc(cx, cy, r, 0, Math.PI * 2);
-            ctx.strokeStyle = '#38bdf8';
-            ctx.lineWidth = 1.5;
-            ctx.stroke();
-            ctx.shadowBlur = 0;
-
-            // Labels cardinaux (N S E O)
-            const cardinalsFour = [
-                { label: 'N', angle: -90 },
-                { label: 'E', angle:   0 },
-                { label: 'S', angle:  90 },
-                { label: 'O', angle: 180 },
-            ];
-            cardinalsFour.forEach(({ label, angle }) => {
-                const rad = angle * Math.PI / 180;
-                const lx = cx + Math.cos(rad) * (r - 16);
-                const ly = cy + Math.sin(rad) * (r - 16);
-                ctx.fillStyle = label === 'N' ? '#38bdf8' : 'rgba(255,255,255,0.5)';
-                ctx.font = `700 11px -apple-system, sans-serif`;
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(label, lx, ly);
-            });
-
-            // Flèche vent (pointe dans la direction d'où vient le vent)
-            const rad = (degrees - 90) * Math.PI / 180;
-            const arrowLen = r - 24;
-
-            // Queue (opposée)
-            const tailX = cx - Math.cos(rad) * (arrowLen * 0.45);
-            const tailY = cy - Math.sin(rad) * (arrowLen * 0.45);
-            const tipX  = cx + Math.cos(rad) * arrowLen;
-            const tipY  = cy + Math.sin(rad) * arrowLen;
-
-            // Trait de la flèche
-            ctx.shadowBlur = 12;
-            ctx.shadowColor = '#fbbf24';
-            ctx.beginPath();
-            ctx.moveTo(tailX, tailY);
-            ctx.lineTo(tipX, tipY);
-            ctx.strokeStyle = 'rgba(251,191,36,0.6)';
-            ctx.lineWidth = 2;
-            ctx.lineCap = 'round';
-            ctx.stroke();
-
-            // Tête de flèche
-            const perpX = -Math.sin(rad) * 5;
-            const perpY =  Math.cos(rad) * 5;
-            ctx.beginPath();
-            ctx.moveTo(tipX, tipY);
-            ctx.lineTo(tipX - Math.cos(rad) * 13 + perpX, tipY - Math.sin(rad) * 13 + perpY);
-            ctx.lineTo(tipX - Math.cos(rad) * 13 - perpX, tipY - Math.sin(rad) * 13 - perpY);
-            ctx.closePath();
-            ctx.fillStyle = '#fbbf24';
-            ctx.fill();
-            ctx.shadowBlur = 0;
-
-            // Point central
-            ctx.beginPath();
-            ctx.arc(cx, cy, 3, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(255,255,255,0.3)';
-            ctx.fill();
-
-            // Degrés + cardinalité au centre
-            const dirs = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSO','SO','OSO','O','ONO','NO','NNO'];
-            const cardinal = dirs[Math.round(degrees / 22.5) % 16];
-            ctx.fillStyle = '#f3f4f6';
-            ctx.font = `700 19px -apple-system, sans-serif`;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(`${degrees}°`, cx, cy - 8);
-            ctx.fillStyle = '#38bdf8';
-            ctx.font = `600 12px -apple-system, sans-serif`;
-            ctx.fillText(cardinal, cx, cy + 11);
-        }
-
-        /* -------------------------------------------------
-           RENDU GRILLE LIVE
-        ------------------------------------------------- */
-        function renderLiveGrid(data) {
-            const grid = document.getElementById("weather-live-grid");
-            const dir  = data.wind?.wind_direction?.value ?? null;
-            const dirs = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSO','SO','OSO','O','ONO','NO','NNO'];
-            const cardinal = dir !== null ? dirs[Math.round(parseInt(dir) / 22.5) % 16] : '—';
-            let html = "";
-
-            // Température + Humidité
-            if (data.outdoor?.temperature) {
-                html += `<div class="kpi-box">
-                    <div class="section-title">Température</div>
-                    <div class="kpi-val color-temp">${data.outdoor.temperature.value} °C</div>
-                </div>`;
-            }
-            if (data.outdoor?.humidity) {
-                html += `<div class="kpi-box">
-                    <div class="section-title">Humidité</div>
-                    <div class="kpi-val color-humidity">${data.outdoor.humidity.value} %</div>
-                </div>`;
-            }
-
-            // Boussole vent (full-width)
-            if (dir !== null) {
-                html += `
-                <div class="kpi-box full">
-                    <div class="section-title">Direction & Vitesse du vent</div>
-                    <div class="compass-wrap">
-                        <canvas id="compass-canvas"></canvas>
-                        <div class="compass-meta">
-                            <div>
-                                <span>Vent moyen</span>
-                                <strong class="color-wind">${data.wind?.wind_speed?.value ?? '—'} <span style="font-size:11px;font-weight:400">km/h</span></strong>
-                            </div>
-                            <div class="meta-center">
-                                <span>Direction</span>
-                                <strong style="color:var(--neon-blue)">${parseInt(dir)}° ${cardinal}</strong>
-                            </div>
-                            <div class="meta-right">
-                                <span>Rafale</span>
-                                <strong class="color-wind">${data.wind?.wind_gust?.value ?? '—'} <span style="font-size:11px;font-weight:400">km/h</span></strong>
-                            </div>
-                        </div>
-                    </div>
-                </div>`;
-            } else {
-                if (data.wind?.wind_speed) {
-                    html += `<div class="kpi-box full">
-                        <div class="section-title">Vent</div>
-                        <div class="kpi-val color-wind">${data.wind.wind_speed.value} <span style="font-size:12px">km/h</span></div>
-                    </div>`;
-                }
-            }
-
-            // Précipitations multi-périodes
-            const rf = data.rainfall;
-            if (rf) {
-                const metrics = [
-                    { key: 'event',   label: 'Événement' },
-                    { key: 'hourly',  label: 'Horaire'   },
-                    { key: 'daily',   label: 'Quotidien' },
-                    { key: 'weekly',  label: 'Hebdo'     },
-                    { key: 'monthly', label: 'Mensuel'   },
-                    { key: 'yearly',  label: 'Annuel'    },
-                ];
-                const cells = metrics
-                    .filter(m => rf[m.key]?.value !== undefined)
-                    .map(m => `
-                        <div class="rain-cell">
-                            <span class="rain-label">${m.label}</span>
-                            <span class="rain-val">${rf[m.key].value}<span style="font-size:11px;font-weight:400;color:var(--text-muted)"> mm</span></span>
-                        </div>`).join('');
-
-                if (cells) {
-                    html += `<div class="kpi-box full">
-                        <div class="section-title">Précipitations</div>
-                        <div class="rain-grid">${cells}</div>
-                    </div>`;
-                }
-            }
-
-            // Pression
-            if (data.pressure?.relative) {
-                html += `<div class="kpi-box full">
-                    <div class="section-title">Pression Relative</div>
-                    <div class="kpi-val" style="color:var(--text-main)">${data.pressure.relative.value} <span style="font-size:14px;font-weight:400">hPa</span></div>
-                </div>`;
-            }
-
-            grid.innerHTML = html;
-
-            // Dessin boussole après injection DOM
-            if (dir !== null) {
-                const canvas = document.getElementById('compass-canvas');
-                if (canvas) drawCompass(canvas, parseInt(dir));
-            }
-
-            document.getElementById("sync-time").innerText = `Mis à jour : ${new Date().toLocaleTimeString('fr-FR')}`;
-        }
-
-        /* -------------------------------------------------
-           FORMATAGE DATE ECOWITT
-        ------------------------------------------------- */
-        function formatDateEcowitt(date) {
-            const pad = n => String(n).padStart(2, '0');
-            return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
-        }
-
-        /* -------------------------------------------------
-           HISTORIQUE — avec cache par plage
-        ------------------------------------------------- */
-        async function loadHistoryData() {
-            if (historyCache[currentRange]) {
-                buildCharts(historyCache[currentRange]);
-                return;
-            }
-
-            const appKey   = localStorage.getItem("ecowitt_app_key");
-            const apiKey   = localStorage.getItem("ecowitt_api_key");
-            const mac      = localStorage.getItem("ecowitt_mac");
-            const debugLog = document.getElementById("api-debug-log");
-
-            const now = new Date();
-            let startTime = new Date(now.getTime() - 24 * 3600 * 1000);
-            let cycle = "1800";
-
-            if (currentRange === '7j') {
-                startTime = new Date(now.getTime() - 7 * 24 * 3600 * 1000);
-                cycle = "14400";
-            } else if (currentRange === '30j') {
-                startTime = new Date(now.getTime() - 30 * 24 * 3600 * 1000);
-                cycle = "86400";
-            }
-
-            const startDateStr = formatDateEcowitt(startTime);
-            const endDateStr   = formatDateEcowitt(now);
-
-            const url = `https://api.ecowitt.net/api/v3/device/history?application_key=${appKey}&api_key=${apiKey}&mac=${mac}&start_date=${encodeURIComponent(startDateStr)}&end_date=${encodeURIComponent(endDateStr)}&cycle=${cycle}&call_back=outdoor.temperature,outdoor.humidity,rainfall.daily,wind.wind_speed,wind.wind_gust&temp_unitid=1&wind_speed_unitid=7&rainfall_unitid=12`;
-
-            try {
-                debugLog.style.color = "var(--text-muted)";
-                debugLog.innerText = "Chargement des graphiques...";
-                const res  = await fetch(url);
-                const json = await res.json();
-
-                if (json.code !== 0) {
-                    debugLog.style.color = "var(--neon-red)";
-                    debugLog.innerText = `Erreur API [Code ${json.code}] : ${json.msg || 'Vérifie tes paramètres'}`;
-                    return;
-                }
-
-                if (!json.data || Object.keys(json.data).length === 0) {
-                    debugLog.style.color = "var(--neon-orange)";
-                    debugLog.innerText = "Aucune donnée historique pour cette période.";
-                    return;
-                }
-
-                historyCache[currentRange] = json.data;
-                debugLog.style.color = "var(--neon-green)";
-                debugLog.innerText = "Données synchronisées ✓";
-                buildCharts(json.data);
-
-            } catch (e) {
-                debugLog.style.color = "var(--neon-red)";
-                debugLog.innerText = `Erreur réseau : ${e.message}`;
-            }
-        }
-
-        /* -------------------------------------------------
-           CONSTRUCTION DES GRAPHIQUES
-        ------------------------------------------------- */
-        function buildCharts(data) {
-            const tempObj     = data.outdoor?.temperature?.list || {};
-            const humidObj    = data.outdoor?.humidity?.list    || {};
-            const rainObj     = data.rainfall?.daily?.list      || {};
-            const windObj     = data.wind?.wind_speed?.list     || {};
-            const gustObj     = data.wind?.wind_gust?.list      || {};
-
-            const allTs = new Set([
-                ...Object.keys(tempObj),
-                ...Object.keys(humidObj),
-                ...Object.keys(rainObj),
-                ...Object.keys(windObj),
-                ...Object.keys(gustObj),
-            ]);
-            const timestamps = Array.from(allTs).sort((a, b) => Number(a) - Number(b));
-            if (timestamps.length === 0) return;
-
-            // Labels propres : HH:MM en 24h, JJ/MM en 7j et 30j
-            const labels = timestamps.map(ts => {
-                const d = new Date(ts * 1000);
-                if (currentRange === '24h') {
-                    return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-                }
-                return `${d.getDate()}/${d.getMonth() + 1}`;
-            });
-
-            const tempData  = timestamps.map(ts => tempObj[ts]  !== undefined ? parseFloat(tempObj[ts])  : null);
-            const humidData = timestamps.map(ts => humidObj[ts] !== undefined ? parseFloat(humidObj[ts]) : null);
-            const rainData  = timestamps.map(ts => rainObj[ts]  !== undefined ? parseFloat(rainObj[ts])  : 0);
-            const windData  = timestamps.map(ts => windObj[ts]  !== undefined ? parseFloat(windObj[ts])  : null);
-            const gustData  = timestamps.map(ts => gustObj[ts]  !== undefined ? parseFloat(gustObj[ts])  : null);
-
-            // Options communes
-            const maxTicks = currentRange === '24h' ? 8 : (currentRange === '7j' ? 7 : 10);
-            const baseOpts = {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    x: {
-                        ticks: {
-                            color: '#94a3b8',
-                            font: { size: 10 },
-                            maxTicksLimit: maxTicks,
-                            maxRotation: 0,
-                        },
-                        grid: { display: false }
-                    },
-                    y: {
-                        ticks: { color: '#94a3b8', font: { size: 10 } },
-                        grid: { color: 'rgba(255, 255, 255, 0.04)' }
-                    }
-                }
-            };
-
-            // 1. Température
-            initChart('tempChart', 'line', labels, [{
-                data: tempData,
-                borderWidth: 2.5,
-                borderColor: ctx => {
-                    const { chart } = ctx;
-                    const { chartArea } = chart;
-                    if (!chartArea) return '#38bdf8';
-                    const g = chart.ctx.createLinearGradient(chartArea.left, 0, chartArea.right, 0);
-                    g.addColorStop(0, '#38bdf8');
-                    g.addColorStop(1, '#4ade80');
-                    return g;
-                },
-                fill: true,
-                backgroundColor: ctx => {
-                    const { chart } = ctx;
-                    const { chartArea } = chart;
-                    if (!chartArea) return 'rgba(56,189,248,0.05)';
-                    const g = chart.ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-                    g.addColorStop(0, 'rgba(56,189,248,0.2)');
-                    g.addColorStop(1, 'rgba(0,0,0,0)');
-                    return g;
-                },
-                tension: 0.35,
-                pointRadius: 0,
-                spanGaps: true,
-            }], baseOpts);
-
-            // 2. Humidité
-            initChart('humidityChart', 'line', labels, [{
-                data: humidData,
-                borderWidth: 2.5,
-                borderColor: '#38bdf8',
-                fill: true,
-                backgroundColor: ctx => {
-                    const { chart } = ctx;
-                    const { chartArea } = chart;
-                    if (!chartArea) return 'rgba(56,189,248,0.05)';
-                    const g = chart.ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-                    g.addColorStop(0, 'rgba(56,189,248,0.18)');
-                    g.addColorStop(1, 'rgba(0,0,0,0)');
-                    return g;
-                },
-                tension: 0.35,
-                pointRadius: 0,
-                spanGaps: true,
-            }], baseOpts);
-
-            // 3. Pluie (cumul journalier)
-            initChart('rainChart', 'bar', labels, [{
-                data: rainData,
-                borderRadius: 5,
-                borderWidth: 1.5,
-                borderColor: '#a78bfa',
-                backgroundColor: ctx => {
-                    const { chart } = ctx;
-                    const { chartArea } = chart;
-                    if (!chartArea) return 'rgba(167,139,250,0.2)';
-                    const g = chart.ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-                    g.addColorStop(0, 'rgba(167,139,250,0.7)');
-                    g.addColorStop(1, 'rgba(167,139,250,0.05)');
-                    return g;
-                },
-            }], baseOpts);
-
-            // 4. Vent (légende activée pour Moyen vs Rafales)
-            const windOpts = {
-                ...baseOpts,
-                plugins: {
-                    legend: {
-                        display: true,
-                        labels: {
-                            color: '#94a3b8',
-                            font: { size: 11 },
-                            boxWidth: 20,
-                            padding: 12,
-                        }
-                    }
-                }
-            };
-            initChart('windChart', 'line', labels, [
-                {
-                    data: windData,
-                    label: 'Moyen',
-                    borderWidth: 1.5,
-                    borderColor: 'rgba(251,191,36,0.45)',
-                    fill: false,
-                    tension: 0.35,
-                    pointRadius: 0,
-                    spanGaps: true,
-                },
-                {
-                    data: gustData,
-                    label: 'Rafales',
-                    borderWidth: 2.5,
-                    borderColor: '#fbbf24',
-                    fill: false,
-                    tension: 0.35,
-                    pointRadius: 0,
-                    spanGaps: true,
-                }
-            ], windOpts);
-        }
-
-        function initChart(canvasId, type, labels, datasets, options) {
-            if (charts[canvasId]) charts[canvasId].destroy();
-            const ctx = document.getElementById(canvasId).getContext('2d');
-            charts[canvasId] = new Chart(ctx, { type, data: { labels, datasets }, options });
-        }
-
-        function logout() {
-            clearInterval(autoRefreshTimer);
-            historyCache = {};
-            localStorage.clear();
-            showScreen("login-screen");
-        }
-    </script>
+function initChart(id, type, labels, datasets, options) {
+    if (charts[id]) charts[id].destroy();
+    charts[id] = new Chart(document.getElementById(id).getContext('2d'), { type, data:{ labels, datasets }, options });
+}
+</script>
 </body>
 </html>
