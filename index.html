@@ -652,10 +652,10 @@ function renderLiveGrid(data,trend,nm1,fc){
     const rainRows=[
       {cond:hv!==undefined, icon:'💧', label:'Taux horaire',  val:hv,  unit:'mm/h', delta:null},
       {cond:ev!==undefined, icon:'🌧️', label:'Événement',     val:ev,  unit:'mm',   delta:null},
-      {cond:dv!==undefined, icon:'📅', label:'Cumul du jour', val:dv,  unit:'mm',   delta:deltaHtml(dv,nm1?.daily)},
-      {cond:wv!==undefined, icon:'📆', label:'Cette semaine', val:wv,  unit:'mm',   delta:deltaHtml(wv,nm1?.weekly)},
-      {cond:mv!==undefined, icon:'🗓️', label:'Ce mois',       val:mv,  unit:'mm',   delta:deltaHtml(mv,nm1?.monthly)},
-      {cond:yv!==undefined, icon:'📊', label:'Cette année',   val:yv,  unit:'mm',   delta:deltaHtml(yv,nm1?.yearly)},
+      {cond:dv!==undefined, icon:'☔️', label:'Cumul du jour', val:dv,  unit:'mm',   delta:deltaHtml(dv,nm1?.daily)},
+      {cond:wv!==undefined, icon:'☔️', label:'Cette semaine', val:wv,  unit:'mm',   delta:deltaHtml(wv,nm1?.weekly)},
+      {cond:mv!==undefined, icon:'☔️', label:'Ce mois',       val:mv,  unit:'mm',   delta:deltaHtml(mv,nm1?.monthly)},
+      {cond:yv!==undefined, icon:'☔️', label:'Cette année',   val:yv,  unit:'mm',   delta:deltaHtml(yv,nm1?.yearly)},
     ].filter(r=>r.cond);
 
     if(rainRows.length){
