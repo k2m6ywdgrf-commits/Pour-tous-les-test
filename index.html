@@ -25,7 +25,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
   border:var(--glass-border);border-radius:16px;padding:20px;
   box-shadow:0 10px 30px rgba(0,0,0,.5);margin-bottom:16px}
 h1{font-size:22px;font-weight:700;text-align:center;letter-spacing:.5px;margin:0 0 4px}
-.section-title{font-size:11px;text-transform:uppercase;letter-spacing:1px;font-weight:700;color:var(--text-muted);margin-bottom:14px}
+.section-title{font-size:11px;text-transform:uppercase;letter-spacing:1px;font-weight:700;
+  color:var(--text-muted);margin-bottom:12px;text-align:center}
 .navigation-capsule{display:flex;background:rgba(15,23,42,.8);border:var(--glass-border);border-radius:30px;padding:4px;margin-bottom:20px}
 .nav-btn{flex:1;background:transparent;border:none;color:var(--text-muted);padding:9px 4px;font-size:12px;font-weight:600;border-radius:25px;cursor:pointer;transition:all .2s}
 .nav-btn.active{background:rgba(255,255,255,.12);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);color:var(--text-main)}
@@ -36,11 +37,18 @@ input:focus{outline:none;border-color:var(--neon-blue);box-shadow:0 0 10px rgba(
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
 .btn{width:100%;background:linear-gradient(135deg,#0ea5e9 0%,#38bdf8 100%);border:none;border-radius:12px;padding:14px;color:#fff;font-size:15px;font-weight:600;cursor:pointer}
 .btn-secondary{background:transparent;border:var(--glass-border);color:var(--text-muted);font-size:12px;padding:10px;border-radius:10px;width:100%;cursor:pointer}
+
+/* KPI GRID */
 .kpi-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
-.kpi-box{background:rgba(30,41,59,.3);border:var(--glass-border);border-radius:12px;padding:16px}
-.kpi-box.full{grid-column:span 2}
-.kpi-val{font-size:26px;font-weight:700;margin-top:4px}
+.kpi-box{background:rgba(30,41,59,.3);border:var(--glass-border);border-radius:14px;padding:18px 14px;
+  text-align:center;display:flex;flex-direction:column;align-items:center}
+.kpi-box.full{grid-column:span 2;align-items:stretch;text-align:left}
+.kpi-val{font-size:28px;font-weight:700;margin-top:6px;margin-bottom:4px}
 .color-temp{color:var(--neon-green)}.color-humidity{color:var(--neon-blue)}.color-wind{color:var(--neon-orange)}
+.kpi-sub{font-size:11px;color:var(--text-muted);margin-top:2px}
+.kpi-row{display:flex;gap:10px;align-items:center;justify-content:center;margin-top:5px}
+
+/* SUN BAR */
 .sun-bar{grid-column:span 2;display:flex;align-items:center;gap:10px;padding:12px 14px;
   background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.15);border-radius:12px}
 .sun-item{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:46px}
@@ -50,6 +58,7 @@ input:focus{outline:none;border-color:var(--neon-blue);box-shadow:0 0 10px rgba(
 .sun-progress-bar{width:100%;height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden}
 .sun-progress-fill{height:100%;border-radius:2px;background:linear-gradient(to right,#fbbf24,#f97316)}
 .sun-progress-label{font-size:10px;color:var(--text-muted)}
+
 /* FORECAST */
 .forecast-toggle{display:flex;background:rgba(30,41,59,.4);border:var(--glass-border);border-radius:20px;padding:3px;margin-bottom:12px}
 .forecast-toggle-btn{flex:1;background:transparent;border:none;color:var(--text-muted);padding:8px;font-size:12px;font-weight:600;border-radius:17px;cursor:pointer;transition:all .2s}
@@ -68,27 +77,30 @@ input:focus{outline:none;border-color:var(--neon-blue);box-shadow:0 0 10px rgba(
 .daily-row{display:flex;align-items:center;gap:10px;padding:10px 12px;
   background:rgba(30,41,59,.3);border:var(--glass-border);border-radius:10px}
 .daily-icon{font-size:22px;width:28px;text-align:center;flex-shrink:0}
-/* MOON */
+
+/* MOON — sans labels */
 .moon-layout{display:flex;gap:16px;align-items:center;margin-bottom:14px}
 .moon-details{flex:1;display:flex;flex-direction:column;gap:8px}
-.moon-phase-name{font-size:15px;font-weight:700;color:#f0d070}
+.moon-phase-name{font-size:15px;font-weight:700;color:#f0d070;text-align:left}
 .moon-stat{display:flex;justify-content:space-between;font-size:12px;color:var(--text-muted)}
 .moon-stat strong{color:var(--text-main);font-weight:600}
-.moon-phases-row{display:flex;justify-content:space-between;padding-top:12px;border-top:1px solid rgba(255,255,255,.05)}
-.moon-phase-cell{display:flex;flex-direction:column;align-items:center;gap:3px}
-.moon-phase-emoji{font-size:18px;line-height:1}
-.moon-phase-label{font-size:7.5px;color:var(--text-muted);text-align:center;line-height:1.3}
-.moon-phase-cell.active .moon-phase-emoji{filter:drop-shadow(0 0 5px rgba(240,215,130,.9))}
-.moon-phase-cell.active .moon-phase-label{color:#f0d070;font-weight:600}
+.moon-phases-row{display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid rgba(255,255,255,.05)}
+.moon-phase-cell{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:1px solid transparent;transition:all .25s}
+.moon-phase-emoji{font-size:18px;line-height:1;transition:all .25s}
+.moon-phase-cell.active{background:rgba(240,215,130,.14);border-color:rgba(240,215,130,.45);
+  box-shadow:0 0 14px rgba(240,215,130,.35)}
+.moon-phase-cell.active .moon-phase-emoji{font-size:23px;filter:drop-shadow(0 0 7px rgba(240,215,130,1))}
+
 /* UV */
 .uv-row{display:flex;align-items:center;gap:16px}
-.uv-big{font-size:42px;font-weight:700;line-height:1;min-width:54px}
+.uv-big{font-size:42px;font-weight:700;line-height:1;min-width:54px;text-align:center}
 .uv-scale-wrap{flex:1}
 .uv-scale-bar{position:relative;height:8px;border-radius:4px;margin-bottom:5px;
   background:linear-gradient(to right,#4ade80 0%,#fbbf24 27%,#f97316 50%,#f43f5e 73%,#a78bfa 100%)}
 .uv-marker{position:absolute;width:3px;height:14px;background:#fff;border-radius:2px;
   top:-3px;transform:translateX(-50%);box-shadow:0 0 6px rgba(0,0,0,.6)}
 .uv-scale-nums{display:flex;justify-content:space-between;font-size:9px;color:var(--text-muted)}
+
 /* COMPASS */
 .compass-wrap{display:flex;flex-direction:column;align-items:center;gap:12px}
 .compass-meta{display:flex;justify-content:space-between;align-items:flex-start;width:100%;font-size:12px;color:var(--text-muted);line-height:1.6}
@@ -99,25 +111,34 @@ input:focus{outline:none;border-color:var(--neon-blue);box-shadow:0 0 10px rgba(
 .wind-trend-time{font-size:10px;color:var(--text-muted)}
 .wind-trend-dir{font-size:11px;font-weight:600;color:var(--neon-blue)}
 .mini-compass-canvas{width:52px;height:52px;display:block}
+
 /* RAIN */
 .rain-top{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
-.rain-top-item{display:flex;flex-direction:column;gap:3px}
+.rain-top-item{display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center}
 .rain-top-label{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px}
 .rain-top-val{font-size:24px;font-weight:700;color:var(--neon-purple);line-height:1.2}
 .rain-top-unit{font-size:11px;font-weight:400;color:var(--text-muted)}
-.rain-divider{height:1px;background:rgba(255,255,255,.06);margin-bottom:14px}
-.rain-cumul-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(68px,1fr));gap:8px}
-.rain-cumul-item{display:flex;flex-direction:column;gap:3px}
+.rain-divider{height:1px;background:rgba(255,255,255,.06);margin-bottom:12px}
+/* HORIZONTAL ROW — une seule ligne */
+.rain-cumul-row{display:flex;align-items:stretch}
+.rain-cumul-cell{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+  gap:3px;padding:8px 4px;text-align:center;
+  border-right:1px solid rgba(255,255,255,.06)}
+.rain-cumul-cell:last-child{border-right:none}
 .rain-cumul-label{font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.3px}
 .rain-cumul-val{font-size:15px;font-weight:700;color:var(--neon-purple);line-height:1.2}
 .rain-cumul-unit{font-size:9px;font-weight:400;color:var(--text-muted)}
-.rain-delta{font-size:9px;line-height:1.4}
+.rain-delta{font-size:9px;line-height:1.3}
+
 /* PRESSURE */
-.pressure-row{display:flex;align-items:center;justify-content:space-between}
-.pressure-trend-box{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
-.pressure-arrow{font-size:26px;font-weight:700;line-height:1}
+.pressure-center{display:flex;align-items:center;justify-content:center;gap:16px;padding:4px 0}
+.pressure-trend-box{display:flex;flex-direction:column;align-items:center;gap:2px}
+.pressure-arrow{font-size:24px;font-weight:700;line-height:1}
 .pressure-trend-label{font-size:10px;color:var(--text-muted)}
+
+/* NO CREDS */
 .no-creds-panel{text-align:center;padding:40px 20px}
+
 /* CHARTS */
 .chart-container{position:relative;height:220px;width:100%;margin-bottom:25px}
 .debug-console{font-family:monospace;font-size:11px;padding:12px;border-radius:10px;margin-top:15px;
@@ -135,7 +156,6 @@ input:focus{outline:none;border-color:var(--neon-blue);box-shadow:0 0 10px rgba(
     <button class="nav-btn"        id="tab-charts"   onclick="switchSubTab('charts')">Graphiques</button>
     <button class="nav-btn"        id="tab-settings" onclick="switchSubTab('settings')">⚙ Réglages</button>
   </div>
-  <!-- TAB 1 -->
   <div id="subview-live">
     <div id="live-no-creds" class="glass-card" style="display:none">
       <div class="no-creds-panel"><div style="font-size:44px;margin-bottom:14px">📡</div>
@@ -147,12 +167,11 @@ input:focus{outline:none;border-color:var(--neon-blue);box-shadow:0 0 10px rgba(
     <div id="live-card" class="glass-card" style="display:none">
       <h1 style="text-align:left;font-size:20px">Ma Station</h1>
       <div id="sync-time" style="font-size:11px;color:var(--text-muted);margin-bottom:20px">Actualisation...</div>
-      <div class="section-title">Indicateurs clés</div>
+      <div class="section-title" style="text-align:left">Indicateurs clés</div>
       <div class="kpi-grid" id="weather-live-grid"></div>
       <button class="btn" style="margin-top:20px" onclick="refreshLive()">Actualiser</button>
     </div>
   </div>
-  <!-- TAB 2 -->
   <div id="subview-charts" style="display:none">
     <div id="charts-no-creds" class="glass-card" style="display:none">
       <div class="no-creds-panel"><div style="font-size:44px;margin-bottom:14px">📡</div>
@@ -168,19 +187,18 @@ input:focus{outline:none;border-color:var(--neon-blue);box-shadow:0 0 10px rgba(
         <button class="nav-btn"        id="range-30j" onclick="changeRange('30j')">30 Jours</button>
       </div>
       <div class="glass-card">
-        <div class="section-title">Température (°C) — plage journalière + moyenne</div>
+        <div class="section-title" style="text-align:left">Température (°C) — plage journalière + moyenne</div>
         <div class="chart-container"><canvas id="tempChart"></canvas></div>
-        <div class="section-title">Humidité (%) — plage journalière + moyenne</div>
+        <div class="section-title" style="text-align:left">Humidité (%) — plage journalière + moyenne</div>
         <div class="chart-container"><canvas id="humidityChart"></canvas></div>
-        <div class="section-title">Précipitations cumulées (mm)</div>
+        <div class="section-title" style="text-align:left">Précipitations cumulées (mm)</div>
         <div class="chart-container"><canvas id="rainChart"></canvas></div>
-        <div class="section-title">Vent — Rafales (barres) & Moyenne (ligne)</div>
+        <div class="section-title" style="text-align:left">Vent — Rafales (barres) & Moyenne (ligne)</div>
         <div class="chart-container"><canvas id="windChart"></canvas></div>
         <div id="api-debug-log" class="debug-console">Statut API : En attente...</div>
       </div>
     </div>
   </div>
-  <!-- TAB 3 -->
   <div id="subview-settings" style="display:none">
     <div class="glass-card">
       <h1 style="text-align:left;font-size:18px;margin-bottom:20px">⚙ Réglages</h1>
@@ -201,25 +219,24 @@ input:focus{outline:none;border-color:var(--neon-blue);box-shadow:0 0 10px rgba(
 </div>
 </div>
 <script>
-/* ══ STATE ══ */
+/* STATE */
 let currentRange='24h',charts={},historyCache={};
 let lyRainCache=null,forecastCache=null,forecastCacheTime=0,autoRefreshTimer=null;
 
-/* ══ INIT ══ */
+/* INIT */
 document.addEventListener('DOMContentLoaded',()=>{
-  prefillSettings(); checkCredsUI();
-  switchSubTab('live');
-  if(hasCredentials()){refreshLive();startAutoRefresh();}
+  prefillSettings(); checkCredsUI(); switchSubTab('live');
+  if(hasCredentials()) refreshLive();
 });
 
-/* ══ CREDS ══ */
-function el(id){return document.getElementById(id);}
+/* CREDS */
+const el=id=>document.getElementById(id);
 function getCreds(){
   const ls=k=>localStorage.getItem(k),lat=ls('ecowitt_lat'),lon=ls('ecowitt_lon');
   return{appKey:ls('ecowitt_app_key')||'',apiKey:ls('ecowitt_api_key')||'',mac:ls('ecowitt_mac')||'',
     lat:lat?parseFloat(lat):null,lon:lon?parseFloat(lon):null};
 }
-function hasCredentials(){const c=getCreds();return !!(c.appKey&&c.apiKey&&c.mac);}
+function hasCredentials(){const c=getCreds();return!!(c.appKey&&c.apiKey&&c.mac);}
 function hasGPS(){const c=getCreds();return c.lat!==null&&c.lon!==null&&!isNaN(c.lat)&&!isNaN(c.lon);}
 function checkCredsUI(){
   const ok=hasCredentials();
@@ -227,7 +244,7 @@ function checkCredsUI(){
   el('charts-no-creds').style.display=ok?'none':'block';el('charts-content').style.display=ok?'block':'none';
 }
 
-/* ══ NAV ══ */
+/* NAV */
 function switchSubTab(tab){
   ['live','charts','settings'].forEach(t=>{
     el(`tab-${t}`).classList.toggle('active',t===tab);
@@ -246,7 +263,7 @@ function startAutoRefresh(){
   },5*60*1000);
 }
 
-/* ══ SETTINGS ══ */
+/* SETTINGS */
 function prefillSettings(){
   const c=getCreds();
   if(c.appKey)el('s-app-key').value=c.appKey;if(c.apiKey)el('s-api-key').value=c.apiKey;
@@ -262,7 +279,8 @@ async function saveSettings(){
     if(!ok){fb.style.color='var(--neon-red)';fb.innerText='❌ Clés invalides.';return;}
   }catch{fb.style.color='var(--neon-red)';fb.innerText='❌ Erreur réseau.';return;}
   localStorage.setItem('ecowitt_app_key',appKey);localStorage.setItem('ecowitt_api_key',apiKey);
-  localStorage.setItem('ecowitt_mac',mac);if(lat)localStorage.setItem('ecowitt_lat',lat);if(lon)localStorage.setItem('ecowitt_lon',lon);
+  localStorage.setItem('ecowitt_mac',mac);
+  if(lat)localStorage.setItem('ecowitt_lat',lat);if(lon)localStorage.setItem('ecowitt_lon',lon);
   historyCache={};lyRainCache=null;forecastCache=null;checkCredsUI();startAutoRefresh();
   fb.style.color='var(--neon-green)';fb.innerText='✓ Connexion établie';
   setTimeout(()=>{switchSubTab('live');refreshLive();},800);
@@ -274,7 +292,7 @@ function clearSettings(){
   el('settings-feedback').style.display='none';checkCredsUI();
 }
 
-/* ══ API ══ */
+/* API */
 function fmtDate(d){const p=n=>String(n).padStart(2,'0');return`${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;}
 async function fetchLiveData(appKey,apiKey,mac){
   const r=await fetch(`https://api.ecowitt.net/api/v3/device/real_time?application_key=${appKey}&api_key=${apiKey}&mac=${mac}&call_back=all&temp_unitid=1&wind_speed_unitid=7&rainfall_unitid=12&pressure_unitid=3`);
@@ -299,18 +317,33 @@ async function fetchForecast(){
   const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,precipitation_probability,precipitation,weathercode,windspeed_10m&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max&timezone=auto&forecast_days=6&wind_speed_unit=kmh`);
   const j=await r.json();forecastCache=j;forecastCacheTime=now;return j;
 }
+
+/* ── REFRESH EN 2 ÉTAPES pour affichage immédiat ── */
 async function refreshLive(){
   if(!hasCredentials())return;
   const{appKey,apiKey,mac}=getCreds();
-  const[lr,tr,nr,fr]=await Promise.allSettled([fetchLiveData(appKey,apiKey,mac),fetchRecentTrend(appKey,apiKey,mac),fetchLastYearRain(appKey,apiKey,mac),fetchForecast()]);
+
+  // Étape 1 : données critiques (affichage immédiat)
+  const[lr,tr]=await Promise.allSettled([
+    fetchLiveData(appKey,apiKey,mac),
+    fetchRecentTrend(appKey,apiKey,mac),
+  ]);
   const live=lr.status==='fulfilled'&&lr.value!==false?lr.value:null;
   const trend=tr.status==='fulfilled'?tr.value:null;
+  if(live) renderLiveGrid(live,trend,null,null);
+
+  // Étape 2 : données secondaires (mise à jour silencieuse)
+  const[nr,fr]=await Promise.allSettled([
+    fetchLastYearRain(appKey,apiKey,mac),
+    fetchForecast(),
+  ]);
   const nm1=nr.status==='fulfilled'?nr.value:null;
   const fc=fr.status==='fulfilled'?fr.value:null;
-  if(live)renderLiveGrid(live,trend,nm1,fc);
+  if(live) renderLiveGrid(live,trend,nm1,fc);
+  startAutoRefresh();
 }
 
-/* ══ CALCULATIONS ══ */
+/* CALCULATIONS */
 function getSunTimes(lat,lon){
   const D=Math.PI/180,R=180/Math.PI,now=new Date();
   const N=Math.floor((now-new Date(now.getFullYear(),0,0))/86400000),lh=lon/15;
@@ -346,8 +379,7 @@ function getFeelsLike(temp,humid,wind){
   return null;
 }
 function getDewPoint(temp,humid){
-  const a=17.27,b=237.7;
-  const alpha=(a*temp)/(b+temp)+Math.log(humid/100);
+  const a=17.27,b=237.7,alpha=(a*temp)/(b+temp)+Math.log(humid/100);
   return Math.round((b*alpha/(a-alpha))*10)/10;
 }
 function pressureTrend(trend){
@@ -383,16 +415,13 @@ function deltaHtml(cur,ly){
 }
 const D16=['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSO','SO','OSO','O','ONO','NO','NNO'];
 const toCard=deg=>D16[Math.round(deg/22.5)%16];
-
 function uvInfo(uvi){
-  if(uvi<=2)  return{color:'#4ade80',label:'Faible'};
-  if(uvi<=5)  return{color:'#fbbf24',label:'Modéré'};
-  if(uvi<=7)  return{color:'#f97316',label:'Élevé'};
-  if(uvi<=10) return{color:'#f43f5e',label:'Très élevé'};
+  if(uvi<=2)return{color:'#4ade80',label:'Faible'};if(uvi<=5)return{color:'#fbbf24',label:'Modéré'};
+  if(uvi<=7)return{color:'#f97316',label:'Élevé'};if(uvi<=10)return{color:'#f43f5e',label:'Très élevé'};
   return{color:'#a78bfa',label:'Extrême'};
 }
 
-/* ══ MOON ══ */
+/* MOON */
 function getMoon(){
   const ref=Date.UTC(2000,0,6,18,14,0),cycle=29.53059;
   const age=(((Date.now()-ref)/86400000%cycle)+cycle)%cycle;
@@ -411,24 +440,21 @@ function drawMoonPhase(canvas,age){
   ctx.fillStyle='rgba(18,24,48,.96)';ctx.fillRect(0,0,sz,sz);
   if(ph>=0.49&&ph<=0.51){ctx.fillStyle='#f0d885';ctx.fillRect(0,0,sz,sz);}
   else if(ph>0.02&&ph<0.98){
-    const cosA=Math.cos(ph*2*Math.PI);
-    ctx.fillStyle='#f0d885';ctx.beginPath();
+    const cosA=Math.cos(ph*2*Math.PI);ctx.fillStyle='#f0d885';ctx.beginPath();
     if(ph<0.5){ctx.moveTo(cx,cy-r);ctx.arc(cx,cy,r,-Math.PI/2,Math.PI/2);ctx.bezierCurveTo(cx+cosA*r*K,cy+r,cx+cosA*r*K,cy-r,cx,cy-r);}
     else{ctx.moveTo(cx,cy-r);ctx.arc(cx,cy,r,-Math.PI/2,Math.PI/2,true);ctx.bezierCurveTo(cx-cosA*r*K,cy+r,cx-cosA*r*K,cy-r,cx,cy-r);}
     ctx.closePath();ctx.fill();
   }
   ctx.restore();
-  const g=Math.sin(ph*Math.PI);
-  ctx.shadowBlur=8+g*16;ctx.shadowColor=`rgba(240,215,130,${.2+g*.5})`;
+  const g=Math.sin(ph*Math.PI);ctx.shadowBlur=8+g*16;ctx.shadowColor=`rgba(240,215,130,${.2+g*.5})`;
   ctx.strokeStyle=`rgba(240,215,130,${.25+g*.3})`;ctx.lineWidth=1;
   ctx.beginPath();ctx.arc(cx,cy,r,0,2*Math.PI);ctx.stroke();ctx.shadowBlur=0;
 }
 
-/* ══ WMO ══ */
+/* WMO */
 function wmo(code){
   const m={0:{i:'☀️',l:'Ensoleillé'},1:{i:'🌤️',l:'Peu nuageux'},2:{i:'⛅',l:'Nuageux'},3:{i:'☁️',l:'Couvert'},
-    45:{i:'🌫️',l:'Brouillard'},48:{i:'🌫️',l:'Brouillard'},
-    51:{i:'🌦️',l:'Bruine'},53:{i:'🌦️',l:'Bruine'},55:{i:'🌧️',l:'Bruine forte'},
+    45:{i:'🌫️',l:'Brouillard'},48:{i:'🌫️',l:'Brouillard'},51:{i:'🌦️',l:'Bruine'},53:{i:'🌦️',l:'Bruine'},55:{i:'🌧️',l:'Bruine forte'},
     61:{i:'🌦️',l:'Pluie légère'},63:{i:'🌧️',l:'Pluie'},65:{i:'🌧️',l:'Pluie forte'},
     71:{i:'🌨️',l:'Neige légère'},73:{i:'❄️',l:'Neige'},75:{i:'❄️',l:'Neige forte'},77:{i:'🌨️',l:'Grésil'},
     80:{i:'🌦️',l:'Averses'},81:{i:'🌧️',l:'Averses'},82:{i:'⛈️',l:'Averses fortes'},
@@ -437,7 +463,7 @@ function wmo(code){
   return m[code]??{i:'🌡️',l:'Variable'};
 }
 
-/* ══ FORECAST ══ */
+/* FORECAST */
 function buildForecastHtml(fc){
   if(!hasGPS())return`<div class="kpi-box full" style="text-align:center;padding:18px;font-size:12px;color:var(--text-muted)">📍 Ajoutez votre <span style="color:var(--neon-blue);cursor:pointer" onclick="switchSubTab('settings')">Lat/Lon dans Réglages</span> pour les prévisions</div>`;
   if(!fc?.hourly)return`<div class="kpi-box full" style="text-align:center;padding:18px;font-size:12px;color:var(--text-muted)">⏳ Chargement des prévisions...</div>`;
@@ -466,7 +492,7 @@ function buildForecastHtml(fc){
       <div style="text-align:right"><div style="font-size:13px;font-weight:700"><span style="color:var(--neon-orange)">${tmax}°</span> / <span style="color:var(--neon-blue)">${tmin}°</span></div>
       <div style="font-size:10px;color:var(--neon-purple)">${rainP}% · ${rain}mm</div></div></div>`;
   }).join('');
-  return`<div class="kpi-box full"><div class="section-title">Prévisions <span style="color:var(--text-muted);font-weight:400">· Open-Meteo</span></div>
+  return`<div class="kpi-box full"><div class="section-title" style="text-align:left">Prévisions <span style="color:var(--text-muted);font-weight:400">· Open-Meteo</span></div>
     <div class="forecast-toggle">
       <button class="forecast-toggle-btn active" id="ftog-h" onclick="toggleFc('h')">Aujourd'hui</button>
       <button class="forecast-toggle-btn" id="ftog-d" onclick="toggleFc('d')">5 Jours</button>
@@ -480,7 +506,7 @@ function toggleFc(v){
   el('ftog-h').classList.toggle('active',v==='h');el('ftog-d').classList.toggle('active',v==='d');
 }
 
-/* ══ COMPASS ══ */
+/* COMPASS */
 function drawCompass(canvas,degrees,size){
   canvas.width=canvas.height=size;
   const ctx=canvas.getContext('2d'),cx=size/2,cy=size/2,r=size*.42,mini=size<80;
@@ -500,7 +526,7 @@ function drawCompass(canvas,degrees,size){
   if(!mini){ctx.fillStyle='#f3f4f6';ctx.font='700 19px -apple-system,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(`${degrees}°`,cx,cy-8);ctx.fillStyle='#38bdf8';ctx.font='600 12px -apple-system,sans-serif';ctx.fillText(toCard(degrees),cx,cy+11);}
 }
 
-/* ══ RENDER LIVE ══ */
+/* RENDER LIVE */
 function renderLiveGrid(data,trend,nm1,fc){
   const grid=el('weather-live-grid');
   const{lat,lon}=getCreds();
@@ -511,14 +537,12 @@ function renderLiveGrid(data,trend,nm1,fc){
   const windDeg=parseInt(data.wind?.wind_direction?.value);
   const pressure=data.pressure?.relative?.value;
   const rf=data.rainfall;
-
-  // UV data — handles several possible API paths
   const uviRaw=data.solar_and_uvi?.uvi?.value??data.uv?.uvi?.value??null;
   const solarRaw=data.solar_and_uvi?.solar_radiation?.value??data.solar?.solar_radiation?.value??null;
   const uviVal=uviRaw!==null?parseFloat(uviRaw):null;
   const solarVal=solarRaw!==null?parseFloat(solarRaw):null;
 
-  // Today min/max WITH timestamps
+  // Min/max temp avec timestamps
   const tList=trend?.outdoor?.temperature?.list||{};
   let tMin=null,tMax=null,tMinTs=null,tMaxTs=null;
   Object.entries(tList).forEach(([ts,v])=>{
@@ -526,19 +550,16 @@ function renderLiveGrid(data,trend,nm1,fc){
     if(tMin===null||val<tMin){tMin=val;tMinTs=parseInt(ts);}
     if(tMax===null||val>tMax){tMax=val;tMaxTs=parseInt(ts);}
   });
-  if(tMin!==null)tMin=Math.round(tMin*10)/10;
-  if(tMax!==null)tMax=Math.round(tMax*10)/10;
-  const fmtHM=ts=>ts?`${String(new Date(ts*1000).getHours()).padStart(2,'0')}h${String(new Date(ts*1000).getMinutes()).padStart(2,'0')}`:null;
+  if(tMin!==null)tMin=Math.round(tMin*10)/10;if(tMax!==null)tMax=Math.round(tMax*10)/10;
+  const fmtHM=ts=>{if(!ts)return'';const d=new Date(ts*1000);return`${String(d.getHours()).padStart(2,'0')}h${String(d.getMinutes()).padStart(2,'0')}`;};
 
   const fl=(!isNaN(temp)&&!isNaN(humid))?getFeelsLike(temp,humid,windKmh):null;
   const dp=(!isNaN(temp)&&!isNaN(humid))?getDewPoint(temp,humid):null;
   const sun=(lat&&lon)?getSunTimes(lat,lon):null;
-  const pct=sunPct(sun);
-  const pT=pressureTrend(trend);
-  const moon=getMoon();
+  const pct=sunPct(sun),pT=pressureTrend(trend),moon=getMoon();
   const wdList=trend?.wind?.wind_direction?.list||{};
   const tPts=Object.keys(wdList).sort((a,b)=>Number(a)-Number(b)).slice(-4).map(ts=>({t:new Date(ts*1000),deg:parseInt(wdList[ts])}));
-  const MOONS=[{e:'🌑',n:'Nouvelle'},{e:'🌒',n:'Pr. Crois.'},{e:'🌓',n:'1er Quart.'},{e:'🌔',n:'Gib. Crois.'},{e:'🌕',n:'Pleine'},{e:'🌖',n:'Gib. Déc.'},{e:'🌗',n:'Der. Quart.'},{e:'🌘',n:'Der. Crois.'}];
+  const MOONS=[{e:'🌑'},{e:'🌒'},{e:'🌓'},{e:'🌔'},{e:'🌕'},{e:'🌖'},{e:'🌗'},{e:'🌘'}];
 
   let h='';
 
@@ -552,25 +573,34 @@ function renderLiveGrid(data,trend,nm1,fc){
     </div>`;
   }
 
-  // TEMP — avec min/max + heure + ressenti
+  // TEMPÉRATURE — centré, min/max + heure + ressenti
   if(!isNaN(temp)){
-    const minLine=tMin!==null?`<div style="display:flex;align-items:center;gap:5px;font-size:11px"><span style="color:var(--neon-blue)">↓ ${tMin}°</span>${fmtHM(tMinTs)?`<span style="color:var(--text-muted);font-size:10px">${fmtHM(tMinTs)}</span>`:''}</div>`:'';
-    const maxLine=tMax!==null?`<div style="display:flex;align-items:center;gap:5px;font-size:11px"><span style="color:var(--neon-orange)">↑ ${tMax}°</span>${fmtHM(tMaxTs)?`<span style="color:var(--text-muted);font-size:10px">${fmtHM(tMaxTs)}</span>`:''}</div>`:'';
-    const flLine=fl!==null?`<div style="font-size:11px;color:var(--text-muted);margin-top:1px">Ressenti ${fl}°</div>`:'';
-    h+=`<div class="kpi-box"><div class="section-title">Température</div><div class="kpi-val color-temp">${temp} °C</div><div style="margin-top:7px;display:flex;flex-direction:column;gap:3px">${minLine}${maxLine}${flLine}</div></div>`;
+    h+=`<div class="kpi-box">
+      <div class="section-title">Température</div>
+      <div class="kpi-val color-temp">${temp} °C</div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:4px;margin-top:6px">
+        ${tMin!==null?`<div style="display:flex;gap:6px;align-items:center;font-size:11px"><span style="color:var(--neon-blue)">↓ ${tMin}°</span><span style="color:var(--text-muted)">${fmtHM(tMinTs)}</span></div>`:''}
+        ${tMax!==null?`<div style="display:flex;gap:6px;align-items:center;font-size:11px"><span style="color:var(--neon-orange)">↑ ${tMax}°</span><span style="color:var(--text-muted)">${fmtHM(tMaxTs)}</span></div>`:''}
+        ${fl!==null?`<div class="kpi-sub">Ressenti ${fl}°</div>`:''}
+      </div>
+    </div>`;
   }
 
-  // HUMID — avec point de rosée
+  // HUMIDITÉ — centré + pt rosée
   if(!isNaN(humid)){
-    const dpLine=dp!==null?`<div style="margin-top:7px;font-size:11px;color:var(--text-muted)">Pt. rosée <strong style="color:var(--neon-blue)">${dp}°C</strong></div>`:'';
-    h+=`<div class="kpi-box"><div class="section-title">Humidité</div><div class="kpi-val color-humidity">${humid} %</div>${dpLine}</div>`;
+    h+=`<div class="kpi-box">
+      <div class="section-title">Humidité</div>
+      <div class="kpi-val color-humidity">${humid} %</div>
+      ${dp!==null?`<div class="kpi-sub" style="margin-top:6px">Pt. rosée <strong style="color:var(--neon-blue)">${dp}°C</strong></div>`:''}
+    </div>`;
   }
 
-  // FORECAST
+  // PRÉVISIONS
   h+=buildForecastHtml(fc);
 
-  // MOON
-  h+=`<div class="kpi-box full"><div class="section-title">Phase Lunaire</div>
+  // PHASE LUNAIRE — emojis sans labels, active en surbrillance
+  h+=`<div class="kpi-box full">
+    <div class="section-title" style="text-align:left">Phase Lunaire</div>
     <div class="moon-layout">
       <canvas id="moon-canvas" width="110" height="110"></canvas>
       <div class="moon-details">
@@ -580,23 +610,23 @@ function renderLiveGrid(data,trend,nm1,fc){
       </div>
     </div>
     <div class="moon-phases-row">
-      ${MOONS.map((p,i)=>`<div class="moon-phase-cell${i===moon.idx?' active':''}"><span class="moon-phase-emoji">${p.e}</span><span class="moon-phase-label">${p.n}</span></div>`).join('')}
+      ${MOONS.map((p,i)=>`<div class="moon-phase-cell${i===moon.idx?' active':''}"><span class="moon-phase-emoji">${p.e}</span></div>`).join('')}
     </div>
   </div>`;
 
   // UV
   if(uviVal!==null&&!isNaN(uviVal)){
-    const{color,label}=uvInfo(uviVal);
-    const pct=Math.min(uviVal/11*100,100).toFixed(1);
-    h+=`<div class="kpi-box full"><div class="section-title">UV & Rayonnement Solaire</div>
+    const{color,label}=uvInfo(uviVal),pctUV=Math.min(uviVal/11*100,100).toFixed(1);
+    h+=`<div class="kpi-box full">
+      <div class="section-title" style="text-align:left">UV & Rayonnement Solaire</div>
       <div class="uv-row">
-        <div style="text-align:center;min-width:60px">
+        <div style="text-align:center;min-width:64px">
           <div class="uv-big" style="color:${color}">${uviVal.toFixed(1)}</div>
           <div style="font-size:11px;font-weight:600;color:${color};margin-top:3px">${label}</div>
         </div>
         <div class="uv-scale-wrap">
-          <div style="font-size:10px;color:var(--text-muted);margin-bottom:6px">Index UV</div>
-          <div class="uv-scale-bar"><div class="uv-marker" style="left:${pct}%"></div></div>
+          <div style="font-size:10px;color:var(--text-muted);margin-bottom:6px">Index UV (0–11+)</div>
+          <div class="uv-scale-bar"><div class="uv-marker" style="left:${pctUV}%"></div></div>
           <div class="uv-scale-nums"><span>0</span><span>3</span><span>6</span><span>8</span><span>11+</span></div>
           ${solarVal!==null&&!isNaN(solarVal)?`<div style="margin-top:10px;font-size:12px;color:var(--text-muted)">☀️ Rayonnement <strong style="color:var(--neon-orange)">${solarVal} W/m²</strong></div>`:''}
         </div>
@@ -604,12 +634,11 @@ function renderLiveGrid(data,trend,nm1,fc){
     </div>`;
   }
 
-  // WIND COMPASS
+  // VENT
   if(!isNaN(windDeg)){
     const tBlock=tPts.length>=2?`<div class="wind-trend-row">${tPts.map(p=>`<div class="wind-trend-item"><canvas class="mini-compass-canvas" data-deg="${p.deg}"></canvas><span class="wind-trend-time">${String(p.t.getHours()).padStart(2,'0')}:${String(p.t.getMinutes()).padStart(2,'0')}</span><span class="wind-trend-dir">${toCard(p.deg)}</span></div>`).join('')}</div>`:'';
-    h+=`<div class="kpi-box full"><div class="section-title">Direction & Vitesse du vent</div>
-      <div class="compass-wrap">
-        <canvas id="compass-canvas"></canvas>
+    h+=`<div class="kpi-box full"><div class="section-title" style="text-align:left">Direction & Vitesse du vent</div>
+      <div class="compass-wrap"><canvas id="compass-canvas"></canvas>
         <div class="compass-meta">
           <div><span>Vent moyen</span><strong class="color-wind">${windKmh} <span style="font-size:11px;font-weight:400">km/h</span></strong></div>
           <div class="meta-center"><span>Direction</span><strong style="color:var(--neon-blue)">${windDeg}° ${toCard(windDeg)}</strong></div>
@@ -619,20 +648,36 @@ function renderLiveGrid(data,trend,nm1,fc){
     </div>`;
   }
 
-  // RAIN
+  // PRÉCIPITATIONS — ligne horizontale unique
   if(rf){
-    const hv=rf.hourly?.value,ev=rf.event?.value,dv=rf.daily?.value,wv=rf.weekly?.value,mv=rf.monthly?.value,yv=rf.yearly?.value;
+    const hv=rf.hourly?.value,ev=rf.event?.value;
+    const dv=rf.daily?.value,wv=rf.weekly?.value,mv=rf.monthly?.value,yv=rf.yearly?.value;
     const cumuls=[dv,wv,mv,yv].some(v=>v!==undefined);
-    h+=`<div class="kpi-box full"><div class="section-title">Précipitations</div>`;
-    if(hv!==undefined||ev!==undefined)h+=`<div class="rain-top">${hv!==undefined?`<div class="rain-top-item"><span class="rain-top-label">Taux horaire</span><span class="rain-top-val">${hv}<span class="rain-top-unit"> mm/h</span></span></div>`:''} ${ev!==undefined?`<div class="rain-top-item"><span class="rain-top-label">Événement</span><span class="rain-top-val">${ev}<span class="rain-top-unit"> mm</span></span></div>`:''}</div>`;
-    if(cumuls){if(hv!==undefined||ev!==undefined)h+=`<div class="rain-divider"></div>`;h+=`<div class="rain-cumul-grid">${dv!==undefined?`<div class="rain-cumul-item"><span class="rain-cumul-label">Quotidien</span><span class="rain-cumul-val">${dv}<span class="rain-cumul-unit"> mm</span></span>${deltaHtml(dv,nm1?.daily)}</div>`:''} ${wv!==undefined?`<div class="rain-cumul-item"><span class="rain-cumul-label">Hebdo</span><span class="rain-cumul-val">${wv}<span class="rain-cumul-unit"> mm</span></span>${deltaHtml(wv,nm1?.weekly)}</div>`:''} ${mv!==undefined?`<div class="rain-cumul-item"><span class="rain-cumul-label">Mensuel</span><span class="rain-cumul-val">${mv}<span class="rain-cumul-unit"> mm</span></span>${deltaHtml(mv,nm1?.monthly)}</div>`:''} ${yv!==undefined?`<div class="rain-cumul-item"><span class="rain-cumul-label">Annuel</span><span class="rain-cumul-val">${yv}<span class="rain-cumul-unit"> mm</span></span>${deltaHtml(yv,nm1?.yearly)}</div>`:''}</div>`;}
+    h+=`<div class="kpi-box full"><div class="section-title" style="text-align:left">Précipitations</div>`;
+    if(hv!==undefined||ev!==undefined)h+=`<div class="rain-top">
+      ${hv!==undefined?`<div class="rain-top-item"><span class="rain-top-label">Taux horaire</span><span class="rain-top-val">${hv}<span class="rain-top-unit"> mm/h</span></span></div>`:''}
+      ${ev!==undefined?`<div class="rain-top-item"><span class="rain-top-label">Événement</span><span class="rain-top-val">${ev}<span class="rain-top-unit"> mm</span></span></div>`:''}
+    </div>`;
+    if(cumuls){
+      if(hv!==undefined||ev!==undefined)h+=`<div class="rain-divider"></div>`;
+      h+=`<div class="rain-cumul-row">
+        ${dv!==undefined?`<div class="rain-cumul-cell"><span class="rain-cumul-label">Quotidien</span><span class="rain-cumul-val">${dv}<span class="rain-cumul-unit"> mm</span></span>${deltaHtml(dv,nm1?.daily)}</div>`:''}
+        ${wv!==undefined?`<div class="rain-cumul-cell"><span class="rain-cumul-label">Hebdo</span><span class="rain-cumul-val">${wv}<span class="rain-cumul-unit"> mm</span></span>${deltaHtml(wv,nm1?.weekly)}</div>`:''}
+        ${mv!==undefined?`<div class="rain-cumul-cell"><span class="rain-cumul-label">Mensuel</span><span class="rain-cumul-val">${mv}<span class="rain-cumul-unit"> mm</span></span>${deltaHtml(mv,nm1?.monthly)}</div>`:''}
+        ${yv!==undefined?`<div class="rain-cumul-cell"><span class="rain-cumul-label">Annuel</span><span class="rain-cumul-val">${yv}<span class="rain-cumul-unit"> mm</span></span>${deltaHtml(yv,nm1?.yearly)}</div>`:''}
+      </div>`;
+    }
     h+=`</div>`;
   }
 
-  // PRESSURE
-  if(pressure!==undefined)h+=`<div class="kpi-box full"><div class="section-title">Pression Relative</div>
-    <div class="pressure-row"><div class="kpi-val" style="color:var(--text-main)">${pressure} <span style="font-size:14px;font-weight:400">hPa</span></div>
-    ${pT?`<div class="pressure-trend-box"><span class="pressure-arrow" style="color:${pT.color}">${pT.arrow}</span><span class="pressure-trend-label">${pT.label}</span></div>`:''}</div></div>`;
+  // PRESSION — centré
+  if(pressure!==undefined)h+=`<div class="kpi-box full">
+    <div class="section-title" style="text-align:left">Pression Relative</div>
+    <div class="pressure-center">
+      <div class="kpi-val" style="color:var(--text-main)">${pressure} <span style="font-size:14px;font-weight:400">hPa</span></div>
+      ${pT?`<div class="pressure-trend-box"><span class="pressure-arrow" style="color:${pT.color}">${pT.arrow}</span><span class="pressure-trend-label">${pT.label}</span></div>`:''}
+    </div>
+  </div>`;
 
   grid.innerHTML=h;
   el('sync-time').innerText=`Mis à jour : ${new Date().toLocaleTimeString('fr-FR')}`;
@@ -641,7 +686,7 @@ function renderLiveGrid(data,trend,nm1,fc){
   document.querySelectorAll('.mini-compass-canvas').forEach(c=>drawCompass(c,parseInt(c.dataset.deg),52));
 }
 
-/* ══ HISTORY CHARTS ══ */
+/* CHARTS */
 async function loadHistoryData(){
   if(!hasCredentials())return;
   if(historyCache[currentRange]){buildCharts(historyCache[currentRange]);return;}
@@ -655,27 +700,16 @@ async function loadHistoryData(){
     const r=await fetch(url),j=await r.json();
     if(j.code!==0){log.style.color='var(--neon-red)';log.innerText=`Erreur API [${j.code}] : ${j.msg||''}`;return;}
     if(!j.data||!Object.keys(j.data).length){log.style.color='var(--neon-orange)';log.innerText='Aucune donnée.';return;}
-    historyCache[currentRange]=j.data;
-    log.style.color='var(--neon-green)';log.innerText='Données synchronisées ✓';
+    historyCache[currentRange]=j.data;log.style.color='var(--neon-green)';log.innerText='Données synchronisées ✓';
     buildCharts(j.data);
   }catch(e){log.style.color='var(--neon-red)';log.innerText=`Erreur réseau : ${e.message}`;}
 }
-
 function dayMinMax(tsList,vals){
   const g={};
-  tsList.forEach((ts,i)=>{
-    if(vals[i]==null)return;
-    const d=new Date(Number(ts)*1000),k=`${d.getFullYear()}_${d.getMonth()}_${d.getDate()}`;
-    if(!g[k])g[k]={mn:Infinity,mx:-Infinity};
-    g[k].mn=Math.min(g[k].mn,vals[i]);g[k].mx=Math.max(g[k].mx,vals[i]);
-  });
-  const get=(ts,prop)=>{
-    const d=new Date(Number(ts)*1000),k=`${d.getFullYear()}_${d.getMonth()}_${d.getDate()}`;
-    const v=g[k]?.[prop];return(v!==undefined&&isFinite(v))?v:null;
-  };
+  tsList.forEach((ts,i)=>{if(vals[i]==null)return;const d=new Date(Number(ts)*1000),k=`${d.getFullYear()}_${d.getMonth()}_${d.getDate()}`;if(!g[k])g[k]={mn:Infinity,mx:-Infinity};g[k].mn=Math.min(g[k].mn,vals[i]);g[k].mx=Math.max(g[k].mx,vals[i]);});
+  const get=(ts,prop)=>{const d=new Date(Number(ts)*1000),k=`${d.getFullYear()}_${d.getMonth()}_${d.getDate()}`;const v=g[k]?.[prop];return(v!==undefined&&isFinite(v))?v:null;};
   return{mn:tsList.map(ts=>get(ts,'mn')),mx:tsList.map(ts=>get(ts,'mx'))};
 }
-
 function buildCharts(data){
   const tO=data.outdoor?.temperature?.list||{},hO=data.outdoor?.humidity?.list||{};
   const rO=data.rainfall?.daily?.list||{},wO=data.wind?.wind_speed?.list||{},gO=data.wind?.wind_gust?.list||{};
@@ -683,59 +717,38 @@ function buildCharts(data){
   if(!ts.length)return;
   const mt=currentRange==='24h'?8:currentRange==='7j'?7:10;
   const labels=ts.map(t=>{const d=new Date(t*1000);return currentRange==='24h'?`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`:`${d.getDate()}/${d.getMonth()+1}`;});
-
-  const base={responsive:true,maintainAspectRatio:false,
-    plugins:{legend:{display:false}},
-    scales:{
-      x:{ticks:{color:'#94a3b8',font:{size:10},maxTicksLimit:mt,maxRotation:0},grid:{display:false}},
-      y:{ticks:{color:'#94a3b8',font:{size:10}},grid:{color:'rgba(255,255,255,.04)'}},
-    }
-  };
-
-  // Gradient helpers
+  const base={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+    scales:{x:{ticks:{color:'#94a3b8',font:{size:10},maxTicksLimit:mt,maxRotation:0},grid:{display:false}},y:{ticks:{color:'#94a3b8',font:{size:10}},grid:{color:'rgba(255,255,255,.04)'}}}};
   const grdV=(ctx,top,bot)=>{const{chart}=ctx,{chartArea}=chart;if(!chartArea)return top;const g=chart.ctx.createLinearGradient(0,chartArea.top,0,chartArea.bottom);g.addColorStop(0,top);g.addColorStop(1,bot);return g;};
   const grdH=(ctx,l,r)=>{const{chart}=ctx,{chartArea}=chart;if(!chartArea)return l;const g=chart.ctx.createLinearGradient(chartArea.left,0,chartArea.right,0);g.addColorStop(0,l);g.addColorStop(1,r);return g;};
 
-  // TEMPERATURE — bande min/max + courbe moyenne
   const tD=ts.map(t=>tO[t]!==undefined?parseFloat(tO[t]):null);
   const{mn:tMn,mx:tMx}=dayMinMax(ts,tD);
   initChart('tempChart','line',labels,[
-    {data:tMn,fill:{target:'+1',above:'rgba(56,189,248,.1)'},
-      borderColor:'transparent',backgroundColor:'transparent',pointRadius:0,tension:.35,spanGaps:true},
+    {data:tMn,fill:{target:'+1',above:'rgba(56,189,248,.1)'},borderColor:'transparent',backgroundColor:'transparent',pointRadius:0,tension:.35,spanGaps:true},
     {data:tMx,fill:false,borderColor:'transparent',backgroundColor:'transparent',pointRadius:0,tension:.35,spanGaps:true},
-    {data:tD,borderWidth:2.5,fill:false,tension:.35,pointRadius:0,spanGaps:true,
-      borderColor:ctx=>grdH(ctx,'#38bdf8','#4ade80')},
+    {data:tD,borderWidth:2.5,fill:false,tension:.35,pointRadius:0,spanGaps:true,borderColor:ctx=>grdH(ctx,'#38bdf8','#4ade80')},
   ],base);
 
-  // HUMIDITY — bande min/max + courbe moyenne
   const hD=ts.map(t=>hO[t]!==undefined?parseFloat(hO[t]):null);
   const{mn:hMn,mx:hMx}=dayMinMax(ts,hD);
   initChart('humidityChart','line',labels,[
-    {data:hMn,fill:{target:'+1',above:'rgba(56,189,248,.1)'},
-      borderColor:'transparent',backgroundColor:'transparent',pointRadius:0,tension:.35,spanGaps:true},
+    {data:hMn,fill:{target:'+1',above:'rgba(56,189,248,.1)'},borderColor:'transparent',backgroundColor:'transparent',pointRadius:0,tension:.35,spanGaps:true},
     {data:hMx,fill:false,borderColor:'transparent',backgroundColor:'transparent',pointRadius:0,tension:.35,spanGaps:true},
     {data:hD,borderWidth:2.5,borderColor:'#38bdf8',fill:false,tension:.35,pointRadius:0,spanGaps:true},
   ],base);
 
-  // RAIN
   initChart('rainChart','bar',labels,[{
-    data:ts.map(t=>rO[t]!==undefined?parseFloat(rO[t]):0),
-    borderRadius:5,borderWidth:1.5,borderColor:'#a78bfa',
+    data:ts.map(t=>rO[t]!==undefined?parseFloat(rO[t]):0),borderRadius:5,borderWidth:1.5,borderColor:'#a78bfa',
     backgroundColor:ctx=>grdV(ctx,'rgba(167,139,250,.7)','rgba(167,139,250,.05)'),
   }],base);
 
-  // WIND — barres rafales + ligne moyenne
-  const windOpts={...base,plugins:{legend:{display:true,
-    labels:{color:'#94a3b8',font:{size:11},boxWidth:20,padding:12,
-      filter:(item)=>item.text&&item.text.length>0}}}};
+  const wOpts={...base,plugins:{legend:{display:true,labels:{color:'#94a3b8',font:{size:11},boxWidth:20,padding:12,filter:item=>item.text&&item.text.length>0}}}};
   initChart('windChart','bar',labels,[
-    {type:'bar',label:'Rafales',data:ts.map(t=>gO[t]!==undefined?parseFloat(gO[t]):0),
-      backgroundColor:'rgba(251,191,36,.2)',borderColor:'rgba(251,191,36,.6)',borderWidth:1,borderRadius:3},
-    {type:'line',label:'Moyenne',data:ts.map(t=>wO[t]!==undefined?parseFloat(wO[t]):null),
-      borderColor:'#38bdf8',borderWidth:2.5,fill:false,tension:.35,pointRadius:0,spanGaps:true},
-  ],windOpts);
+    {type:'bar',label:'Rafales',data:ts.map(t=>gO[t]!==undefined?parseFloat(gO[t]):0),backgroundColor:'rgba(251,191,36,.2)',borderColor:'rgba(251,191,36,.6)',borderWidth:1,borderRadius:3},
+    {type:'line',label:'Moyenne',data:ts.map(t=>wO[t]!==undefined?parseFloat(wO[t]):null),borderColor:'#38bdf8',borderWidth:2.5,fill:false,tension:.35,pointRadius:0,spanGaps:true},
+  ],wOpts);
 }
-
 function initChart(id,type,labels,datasets,options){
   if(charts[id])charts[id].destroy();
   charts[id]=new Chart(el(id).getContext('2d'),{type,data:{labels,datasets},options});
