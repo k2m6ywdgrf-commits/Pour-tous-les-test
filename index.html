@@ -135,7 +135,7 @@ input:focus{outline:none;border-color:var(--neon-blue);box-shadow:0 0 10px rgba(
   color:var(--text-muted);margin:20px 0 12px;padding-top:16px;border-top:1px solid rgba(255,255,255,.06)}
 .settings-section-title:first-child{margin-top:0;padding-top:0;border-top:none}
 
-/* Nouvelles jauges horizontales et curseurs */
+/* Jauges horizontales et curseurs */
 .custom-gauge-bg {
   position: relative;
   height: 6px;
@@ -423,8 +423,17 @@ async function fetchLastYearRain(appKey,apiKey,mac){
 async function fetchForecast(){
   const now=Date.now();if(forecastCache&&now-forecastCacheTime<3600000)return forecastCache;
   if(!hasGPS())return null;const{lat,lon}=getCreds();
-  const r=await fetchWTimeout(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,precipitation_probability,precipitation,weathercode,windspeed_10m&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max&timezone=auto&forecast_days=6&wind_speed_unit=kmh`);
-  const j=await r.json();forecastCache=j;forecastCacheTime=now;return j;
+  try {
+    const r=await fetchWTimeout(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,precipitation_probability,precipitation,weather_code,windspeed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max&timezone=auto&forecast_days=6&wind_speed_unit=kmh`);
+    const j=await r.json();
+    if(j && (j.hourly || j.error)) {
+      forecastCache=j;forecastCacheTime=now;return j;
+    }
+    return null;
+  } catch(e) {
+    console.error("Erreur d'appel Open-Meteo:", e);
+    return { error: true, reason: "Timeout ou déconnexion réseau" };
+  }
 }
 async function fetchAirQuality(){
   const now=Date.now();if(aqCache&&now-aqCacheTime<1800000)return aqCache;
@@ -479,6 +488,64 @@ function sunPct(t){
   const now=new Date(),nm=now.getHours()*60+now.getMinutes(),r=m(t.sunrise),s=m(t.sunset);
   return nm<=r?0:nm>=s?100:Math.round((nm-r)/(s-r)*100);
 }
+
+/* CALCUL DU LOOK DYNAMIQUE ET LIQUID GLASS DE LA CARTE SOLEIL & PLUIE */
+function getSunCardStyle(sun, rainRate) {
+  if (!sun || !sun.sunrise || !sun.sunset) {
+    return 'background:rgba(30,41,59,.3); border:var(--glass-border);';
+  }
+  const m = s => { const [h, mi] = s.split(':').map(Number); return h * 60 + mi; };
+  const now = new Date();
+  const nm = now.getHours() * 60 + now.getMinutes();
+  const r = m(sun.sunrise);
+  const s = m(sun.sunset);
+  
+  const isNight = (nm < r || nm > s);
+  const isRain = rainRate > 0;
+  
+  let gradient = '';
+  let borderColor = 'rgba(255,255,255,.06)';
+  let shadow = 'box-shadow: 0 10px 25px rgba(0,0,0,.4), inset 0 1px 1px rgba(255,255,255,0.05)';
+  
+  if (isRain) {
+    if (isNight) {
+      // Nuit pluvieuse : Nuit d'encre sombre avec lueur violacée orageuse
+      gradient = 'linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 27, 75, 0.5) 60%, rgba(76, 29, 149, 0.15) 100%)';
+      borderColor = 'rgba(167, 139, 250, 0.2)';
+      shadow = 'box-shadow: 0 10px 25px rgba(0,0,0,.5), inset 0 1px 1px rgba(255,255,255,0.03)';
+    } else {
+      // Jour pluvieux : Gris ardoise liquide & reflet métallique argenté
+      gradient = 'linear-gradient(135deg, rgba(30, 41, 59, 0.85) 0%, rgba(71, 85, 105, 0.4) 50%, rgba(15, 23, 42, 0.85) 100%)';
+      borderColor = 'rgba(148, 163, 184, 0.25)';
+      shadow = 'box-shadow: 0 10px 25px rgba(0,0,0,.4), inset 0 1px 1px rgba(255,255,255,0.15)';
+    }
+  } else {
+    if (nm >= r - 45 && nm <= r + 60) {
+      // Aube / Lever du soleil : Dégradé flamboyant cuivre et orange matinal
+      const progress = (nm - (r - 45)) / 105;
+      gradient = 'linear-gradient(135deg, rgba(251, 146, 60, 0.25) 0%, rgba(194, 65, 12, 0.4) 50%, rgba(15, 23, 42, 0.85) 100%)';
+      borderColor = `rgba(249, 115, 22, ${0.15 + progress * 0.15})`;
+      shadow = 'box-shadow: 0 10px 25px rgba(0,0,0,.4), inset 0 1px 2px rgba(251, 146, 60, 0.1)';
+    } else if (nm >= s - 60 && nm <= s + 45) {
+      // Crépuscule / Coucher du soleil : Violet/rose liquide magique et profond
+      gradient = 'linear-gradient(135deg, rgba(219, 39, 119, 0.2) 0%, rgba(124, 58, 237, 0.3) 50%, rgba(15, 23, 42, 0.9) 100%)';
+      borderColor = 'rgba(167, 139, 250, 0.3)';
+      shadow = 'box-shadow: 0 10px 25px rgba(0,0,0,.4), inset 0 1px 2px rgba(219, 39, 119, 0.1)';
+    } else if (isNight) {
+      // Nuit claire : Bleu nuit cosmique avec fine lueur néon cyan
+      gradient = 'linear-gradient(135deg, rgba(10, 15, 30, 0.9) 0%, rgba(15, 23, 42, 0.75) 60%, rgba(30, 27, 75, 0.4) 100%)';
+      borderColor = 'rgba(56, 189, 248, 0.12)';
+    } else {
+      // Plein jour : Or liquide chaud hautement translucide
+      gradient = 'linear-gradient(135deg, rgba(251, 191, 36, 0.16) 0%, rgba(217, 119, 6, 0.06) 60%, rgba(15, 23, 42, 0.75) 100%)';
+      borderColor = 'rgba(251, 191, 36, 0.25)';
+      shadow = 'box-shadow: 0 10px 25px rgba(0,0,0,.4), inset 0 1px 2px rgba(251, 191, 36, 0.15)';
+    }
+  }
+  
+  return `background: ${gradient}; border: 1px solid ${borderColor}; ${shadow}; background-clip: padding-box;`;
+}
+
 function getFeelsLike(temp,humid,wind){
   if(temp<=10&&wind>=4.8){const v=Math.pow(wind,.16);return Math.round((13.12+0.6215*temp-11.37*v+0.3965*temp*v)*10)/10;}
   if(temp>=27&&humid>=40){
@@ -585,13 +652,17 @@ function wmo(code){
 function buildForecastHtml(fc){
   const citySuffix = detectedCity ? ` - ${detectedCity}` : "";
   if(!hasGPS())return`<div class="kpi-box full" style="text-align:center;padding:18px;font-size:12px;color:var(--text-muted)">📍 Ajoutez vos coordonnées ou utilisez <span style="color:var(--neon-blue);cursor:pointer;font-weight:600" onclick="switchSubTab('settings')">le GPS Auto</span> pour afficher les prévisions</div>`;
+  if(fc && fc.error) {
+    return `<div class="kpi-box full"><div class="section-title" style="text-align:left">Prévisions Open météo</div><div style="text-align:center;padding:12px;font-size:12px;color:var(--neon-red)">❌ Échec du chargement : ${fc.reason}</div></div>`;
+  }
   if(!fc?.hourly)return`<div class="kpi-box full"><div class="section-title" style="text-align:left">Prévisions Open météo<span id="forecast-city" style="text-transform:none;font-weight:400;color:var(--text-muted)">${citySuffix}</span></div><div style="text-align:center;padding:12px;font-size:12px;color:var(--text-muted)">⏳ Chargement Open-Meteo...</div></div>`;
+  
   const now=new Date(),p=n=>String(n).padStart(2,'0');
   const curStr=`${now.getFullYear()}-${p(now.getMonth()+1)}-${p(now.getDate())}T${p(now.getHours())}:00`;
   let si=fc.hourly.time.indexOf(curStr);if(si<0)si=0;
   const hourly=fc.hourly.time.slice(si,si+24).map((t,i)=>{
     const hr=parseInt(t.slice(11,13)),isNow=i===0;
-    const code=fc.hourly.weathercode[si+i],temp=Math.round(fc.hourly.temperature_2m[si+i]);
+    const code=fc.hourly.weather_code[si+i],temp=Math.round(fc.hourly.temperature_2m[si+i]);
     const rain=fc.hourly.precipitation_probability[si+i]??0,wind=Math.round(fc.hourly.windspeed_10m[si+i]);
     return`<div class="hourly-card${isNow?' now':''}"><span class="hourly-time">${isNow?'Maint.':`${hr}h`}</span>
       <span class="hourly-icon">${wmo(code).i}</span><span class="hourly-temp">${temp}°</span>
@@ -600,7 +671,7 @@ function buildForecastHtml(fc){
   }).join('');
   const JOURS=['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
   const daily=fc.daily.time.slice(1,6).map((t,i)=>{
-    const d=new Date(t+'T12:00:00'),idx=i+1,m=wmo(fc.daily.weathercode[idx]);
+    const d=new Date(t+'T12:00:00'),idx=i+1,m=wmo(fc.daily.weather_code[idx]);
     return`<div class="daily-row"><span class="daily-icon">${m.i}</span>
       <div style="flex:1"><div style="font-size:12px;font-weight:600">${JOURS[d.getDay()]} <span style="font-size:10px;color:var(--text-muted);font-weight:400">${d.getDate()}/${d.getMonth()+1}</span></div>
       <div style="font-size:10px;color:var(--text-muted)">${m.l}</div></div>
@@ -634,20 +705,6 @@ function drawCompass(canvas,degrees,size){
   if(!mini){ctx.fillStyle='#f3f4f6';ctx.font='700 19px -apple-system,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(`${degrees}°`,cx,cy-8);ctx.fillStyle='#38bdf8';ctx.font='600 12px -apple-system,sans-serif';ctx.fillText(toCard(degrees),cx,cy+11);}
 }
 
-/* HELPER COULEUR MÉTÉO */
-function getWeatherGradient(code) {
-  // Pluie / Orages (Bleu foncé / Violet)
-  if ([51, 53, 55, 61, 63, 65, 80, 81, 82, 95, 96, 99].includes(code)) {
-    return 'linear-gradient(135deg, rgba(30, 64, 175, 0.4), rgba(15, 23, 42, 0.7))';
-  }
-  // Soleil (Orange / Or)
-  if ([0, 1].includes(code)) {
-    return 'linear-gradient(135deg, rgba(217, 119, 6, 0.4), rgba(15, 23, 42, 0.7))';
-  }
-  // Nuageux / Brouillard (Gris / Neutre)
-  return 'rgba(30, 41, 59, 0.5)';
-}
-
 /* INJECTION REAL TIME GRID */
 function renderLiveGrid(data,trend,nm1,fc,aq){
   const grid=el('weather-live-grid'), th=getThresholds();
@@ -657,15 +714,9 @@ function renderLiveGrid(data,trend,nm1,fc,aq){
   const uviRaw=data.solar_and_uvi?.uvi?.value??data.uv?.uvi?.value??null;
   const solarRaw=data.solar_and_uvi?.solar_radiation?.value??data.solar?.solar_radiation?.value??null;
   const uviVal=uviRaw!==null?parseFloat(uviRaw):null, solarVal=solarRaw!==null?parseFloat(solarRaw):null;
-
-  // Calcul du code météo actuel pour le fond
-  let currentCode = 0;
-  if(fc && fc.hourly) {
-    const now=new Date(),p=n=>String(n).padStart(2,'0');
-    const curStr=`${now.getFullYear()}-${p(now.getMonth()+1)}-${p(now.getDate())}T${p(now.getHours())}:00`;
-    let si=fc.hourly.time.indexOf(curStr); if(si<0) si=0;
-    currentCode = fc.hourly.weathercode[si];
-  }
+  
+  // Récupération de l'état de la pluie en direct
+  const rainRate = (rf && rf.hourly && rf.hourly.value) ? parseFloat(rf.hourly.value) : 0;
 
   let alertsHtml='';
   if(!isNaN(temp)){
@@ -692,19 +743,24 @@ function renderLiveGrid(data,trend,nm1,fc,aq){
 
   const fl=(!isNaN(temp)&&!isNaN(humid))?getFeelsLike(temp,humid,windKmh):null;
   const dp=(!isNaN(temp)&&!isNaN(humid))?getDewPoint(temp,humid):null;
-  const pct=sunPct((getCreds().lat&&getCreds().lon)?getSunTimes(getCreds().lat,getCreds().lon):null), pT=pressureTrend(trend), moon=getMoon();
+  
+  const sun=(getCreds().lat&&getCreds().lon)?getSunTimes(getCreds().lat,getCreds().lon):null;
+  const pct=sunPct(sun), pT=pressureTrend(trend), moon=getMoon();
   const wdList=trend?.wind?.wind_direction?.list||{};
   const tPts=Object.keys(wdList).sort((a,b)=>Number(a)-Number(b)).slice(-4).map(ts=>({t:new Date(ts*1000),deg:parseInt(wdList[ts])}));
   const MOONS=[{e:'🌑'},{e:'🌒'},{e:'🌓'},{e:'🌔'},{e:'🌕'},{e:'🌖'},{e:'🌗'},{e:'🌘'}];
 
   let h='';
-  const sun=(getCreds().lat&&getCreds().lon)?getSunTimes(getCreds().lat,getCreds().lon):null;
   if(sun?.sunrise){
-    const lbl = pct === 0 ? "Avant le lever" : pct === 100 ? "Après le coucher" : "Ensoleillement";
+    let lbl = pct === 0 ? "🌙 Nuit" : pct === 100 ? "🌙 Nuit" : "☀️ Ensoleillement";
+    if (rainRate > 0) {
+      lbl = pct === 0 || pct === 100 ? "🌧️ Nuit pluvieuse" : "🌧️ Journée pluvieuse";
+    }
     const nextSunriseStr = pct === 100 ? `<div class="next-sunrise">Prochain lever à ${sun.sunrise}</div>` : '';
-    // Appliquer le dégradé dynamique ici
-    h+=`<div class="kpi-box full" style="background: ${getWeatherGradient(currentCode)};">
-      <div class="section-title" style="text-align:left">Soleil</div>
+    const sunCardStyle = getSunCardStyle(sun, rainRate);
+    
+    h+=`<div class="kpi-box full" style="${sunCardStyle}">
+      <div class="section-title" style="text-align:left">Soleil & Ambiance</div>
       <div style="display: flex; flex-direction: column;">
         <div class="kpi-val" style="margin:0; text-align:left; font-size:22px;">${lbl}</div>
         ${nextSunriseStr}
