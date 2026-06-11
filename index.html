@@ -509,40 +509,33 @@ function getSunCardStyle(sun, rainRate) {
   
   if (isRain) {
     if (isNight) {
-      // Nuit pluvieuse : Nuit d'encre sombre avec lueur violacée orageuse
       gradient = 'linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 27, 75, 0.5) 60%, rgba(76, 29, 149, 0.15) 100%)';
       borderColor = 'rgba(167, 139, 250, 0.2)';
       shadow = 'box-shadow: 0 10px 25px rgba(0,0,0,.5), inset 0 1px 1px rgba(255,255,255,0.03)';
     } else {
-      // Jour pluvieux : Gris ardoise liquide & reflet métallique argenté
       gradient = 'linear-gradient(135deg, rgba(30, 41, 59, 0.85) 0%, rgba(71, 85, 105, 0.4) 50%, rgba(15, 23, 42, 0.85) 100%)';
       borderColor = 'rgba(148, 163, 184, 0.25)';
       shadow = 'box-shadow: 0 10px 25px rgba(0,0,0,.4), inset 0 1px 1px rgba(255,255,255,0.15)';
     }
   } else {
     if (nm >= r - 45 && nm <= r + 60) {
-      // Aube / Lever du soleil : Dégradé flamboyant cuivre et orange matinal
       const progress = (nm - (r - 45)) / 105;
       gradient = 'linear-gradient(135deg, rgba(251, 146, 60, 0.25) 0%, rgba(194, 65, 12, 0.4) 50%, rgba(15, 23, 42, 0.85) 100%)';
       borderColor = `rgba(249, 115, 22, ${0.15 + progress * 0.15})`;
       shadow = 'box-shadow: 0 10px 25px rgba(0,0,0,.4), inset 0 1px 2px rgba(251, 146, 60, 0.1)';
     } else if (nm >= s - 60 && nm <= s + 45) {
-      // Crépuscule / Coucher du soleil : Violet/rose liquide magique et profond
       gradient = 'linear-gradient(135deg, rgba(219, 39, 119, 0.2) 0%, rgba(124, 58, 237, 0.3) 50%, rgba(15, 23, 42, 0.9) 100%)';
       borderColor = 'rgba(167, 139, 250, 0.3)';
       shadow = 'box-shadow: 0 10px 25px rgba(0,0,0,.4), inset 0 1px 2px rgba(219, 39, 119, 0.1)';
     } else if (isNight) {
-      // Nuit claire : Bleu nuit cosmique avec fine lueur néon cyan
       gradient = 'linear-gradient(135deg, rgba(10, 15, 30, 0.9) 0%, rgba(15, 23, 42, 0.75) 60%, rgba(30, 27, 75, 0.4) 100%)';
       borderColor = 'rgba(56, 189, 248, 0.12)';
     } else {
-      // Plein jour : Or liquide chaud hautement translucide
       gradient = 'linear-gradient(135deg, rgba(251, 191, 36, 0.16) 0%, rgba(217, 119, 6, 0.06) 60%, rgba(15, 23, 42, 0.75) 100%)';
       borderColor = 'rgba(251, 191, 36, 0.25)';
       shadow = 'box-shadow: 0 10px 25px rgba(0,0,0,.4), inset 0 1px 2px rgba(251, 191, 36, 0.15)';
     }
   }
-  
   return `background: ${gradient}; border: 1px solid ${borderColor}; ${shadow}; background-clip: padding-box;`;
 }
 
@@ -778,7 +771,10 @@ function renderLiveGrid(data,trend,nm1,fc,aq){
     h+=`<div class="kpi-box"><div class="section-title">Température</div><div class="kpi-val color-temp">${temp} °C</div><div style="display:flex;flex-direction:column;align-items:center;gap:4px;margin-top:6px">${tMin!==null?`<div style="font-size:11px"><span style="color:var(--neon-blue)">↓ ${tMin}°</span> <span style="color:var(--text-muted)">${fmtHM(tMinTs)}</span></div>`:''}${tMax!==null?`<div style="font-size:11px"><span style="color:var(--neon-orange)">↑ ${tMax}°</span> <span style="color:var(--text-muted)">${fmtHM(tMaxTs)}</span></div>`:''}${fl!==null?`<div class="kpi-sub">Ressenti ${fl}°</div>`:''}</div></div>`;
   }
   if(!isNaN(humid)){
-    h+=`<div class="kpi-box"><div class="section-title">Humidité</div><div class="kpi-val color-humidity">${humid} %</div>${dp!==null?`<div class="kpi-sub" style="margin-top:6px">Pt de rosée <strong style="color:var(--neon-blue)">${dp}°C</strong></div>`:''}</div>`;
+    // Remplissage horizontal proportionnel à la valeur de l'humidité avec le bleu néon assombri (12% opacité de remplissage, 30% bordure)
+    const fillBg = `linear-gradient(90deg, color-mix(in srgb, var(--neon-blue) 12%, transparent) 0%, color-mix(in srgb, var(--neon-blue) 12%, transparent) ${humid}%, rgba(30, 41, 59, 0.3) ${humid}%, rgba(30, 41, 59, 0.3) 100%)`;
+    const fillBorder = `1px solid color-mix(in srgb, var(--neon-blue) 30%, transparent)`;
+    h+=`<div class="kpi-box" style="background: ${fillBg}; border: ${fillBorder}; box-shadow: 0 10px 25px rgba(0,0,0,.4); background-clip: padding-box;"><div class="section-title">Humidité</div><div class="kpi-val color-humidity">${humid} %</div>${dp!==null?`<div class="kpi-sub" style="margin-top:6px">Pt de rosée <strong style="color:var(--neon-blue)">${dp}°C</strong></div>`:''}</div>`;
   }
 
   h+=buildForecastHtml(fc);
@@ -786,7 +782,10 @@ function renderLiveGrid(data,trend,nm1,fc,aq){
   if(aq&&aq.european_aqi!==undefined){
     const inf=aqInfo(aq.european_aqi);
     const aqiPct = Math.min(100, Math.max(0, (aq.european_aqi / 100) * 100));
-    h+=`<div class="kpi-box full">
+    // Fond dynamique dégradé basé sur la couleur IQA (14% d'opacité en haut gauche à 75% du fond sombre) et bordure assortie (30%)
+    const aqStyle = `background: linear-gradient(135deg, color-mix(in srgb, ${inf.color} 14%, transparent) 0%, rgba(15, 23, 42, 0.75) 100%); border: 1px solid color-mix(in srgb, ${inf.color} 30%, transparent); box-shadow: 0 10px 25px rgba(0,0,0,.4); background-clip: padding-box;`;
+    
+    h+=`<div class="kpi-box full" style="${aqStyle}">
       <div class="section-title" style="text-align:left">🌿 Indice Qualité de l'Air (IQA)</div>
       <div class="aq-container" style="margin-bottom:4px;">
         <div><div style="font-size:22px;font-weight:700;color:${inf.color}">${inf.label}</div><div style="font-size:10px;color:var(--text-muted);margin-top:2px">Indice européen : ${aq.european_aqi}</div></div>
@@ -806,7 +805,10 @@ function renderLiveGrid(data,trend,nm1,fc,aq){
 
   if(uviVal!==null&&!isNaN(uviVal)){
     const{color,label}=uvInfo(uviVal),pctUV=Math.min(uviVal/11*100,100).toFixed(1);
-    h+=`<div class="kpi-box full"><div class="section-title" style="text-align:left">UV & Rayonnement Solaire</div><div class="uv-row"><div style="text-align:center;min-width:64px"><div class="uv-big" style="color:${color}">${uviVal.toFixed(1)}</div><div style="font-size:11px;font-weight:600;color:${color};margin-top:3px">${label}</div></div><div class="uv-scale-wrap"><div style="font-size:10px;color:var(--text-muted);margin-bottom:6px">Index UV global</div><div class="uv-scale-bar"><div class="uv-marker" style="left:${pctUV}%"></div></div><div class="uv-scale-nums"><span>0</span><span>3</span><span>6</span><span>8</span><span>11+</span></div>${solarVal!==null?`<div style="margin-top:10px;font-size:12px;color:var(--text-muted)">☀️ Énergie solaire : <strong style="color:var(--neon-orange)">${solarVal} W/m²</strong></div>`:''}</div></div></div>`;
+    // Fond dynamique dégradé basé sur la couleur UV (14% d'opacité à 75% du fond sombre) et bordure assortie (30%)
+    const uvStyle = `background: linear-gradient(135deg, color-mix(in srgb, ${color} 14%, transparent) 0%, rgba(15, 23, 42, 0.75) 100%); border: 1px solid color-mix(in srgb, ${color} 30%, transparent); box-shadow: 0 10px 25px rgba(0,0,0,.4); background-clip: padding-box;`;
+    
+    h+=`<div class="kpi-box full" style="${uvStyle}"><div class="section-title" style="text-align:left">UV & Rayonnement Solaire</div><div class="uv-row"><div style="text-align:center;min-width:64px"><div class="uv-big" style="color:${color}">${uviVal.toFixed(1)}</div><div style="font-size:11px;font-weight:600;color:${color};margin-top:3px">${label}</div></div><div class="uv-scale-wrap"><div style="font-size:10px;color:var(--text-muted);margin-bottom:6px">Index UV global</div><div class="uv-scale-bar"><div class="uv-marker" style="left:${pctUV}%"></div></div><div class="uv-scale-nums"><span>0</span><span>3</span><span>6</span><span>8</span><span>11+</span></div>${solarVal!==null?`<div style="margin-top:10px;font-size:12px;color:var(--text-muted)">☀️ Énergie solaire : <strong style="color:var(--neon-orange)">${solarVal} W/m²</strong></div>`:''}</div></div></div>`;
   }
   if(!isNaN(windDeg)){
     const tBlock=tPts.length>=2?`<div class="wind-trend-row">${tPts.map(p=>`<div class="wind-trend-item"><canvas class="mini-compass-canvas" data-deg="${p.deg}"></canvas><span class="wind-trend-time">${String(p.t.getHours()).padStart(2,'0')}:${String(p.t.getMinutes()).padStart(2,'0')}</span><span class="wind-trend-dir">${toCard(p.deg)}</span></div>`).join('')}</div>`:'';
@@ -831,14 +833,18 @@ function renderLiveGrid(data,trend,nm1,fc,aq){
     let baroPct = ((pVal - 970) / (1040 - 970)) * 100;
     baroPct = Math.min(100, Math.max(0, baroPct));
     
-    let baroText = ""; let baroIcon = "";
-    if (pVal < 990) { baroText = "Tempête"; baroIcon = "🌪️"; }
-    else if (pVal < 1009) { baroText = "Pluie ou Vent"; baroIcon = "🌧️"; }
-    else if (pVal < 1022) { baroText = "Variable"; baroIcon = "⛅"; }
-    else if (pVal < 1032) { baroText = "Beau temps"; baroIcon = "☀️"; }
-    else { baroText = "Temps sec"; baroIcon = "🏜️"; }
+    // Détermination de la couleur et texte du baromètre selon la pression mesurée
+    let baroColor = ""; let baroText = ""; let baroIcon = "";
+    if (pVal < 990) { baroText = "Tempête"; baroIcon = "🌪️"; baroColor = "#2563eb"; }
+    else if (pVal < 1009) { baroText = "Pluie ou Vent"; baroIcon = "🌧️"; baroColor = "#38bdf8"; }
+    else if (pVal < 1022) { baroText = "Variable"; baroIcon = "⛅"; baroColor = "#94a3b8"; }
+    else if (pVal < 1032) { baroText = "Beau temps"; baroIcon = "☀️"; baroColor = "#fbbf24"; }
+    else { baroText = "Temps sec"; baroIcon = "🏜️"; baroColor = "#ea580c"; }
     
-    h+=`<div class="kpi-box full">
+    // Application du style dynamic glass lié à la couleur du baromètre
+    const baroStyle = `background: linear-gradient(135deg, color-mix(in srgb, ${baroColor} 14%, transparent) 0%, rgba(15, 23, 42, 0.75) 100%); border: 1px solid color-mix(in srgb, ${baroColor} 30%, transparent); box-shadow: 0 10px 25px rgba(0,0,0,.4); background-clip: padding-box;`;
+    
+    h+=`<div class="kpi-box full" style="${baroStyle}">
       <div class="section-title" style="text-align:left">Baromètre</div>
       <div class="pressure-center" style="justify-content:space-between; width:100%; padding:0;">
         <div class="kpi-val" style="margin:0;">${pVal.toFixed(1)} <span style="font-size:14px;font-weight:400;color:var(--text-muted);">hPa</span></div>
@@ -848,7 +854,7 @@ function renderLiveGrid(data,trend,nm1,fc,aq){
         <div class="custom-gauge-cursor" style="left: ${baroPct}%;"></div>
       </div>
       <div id="baroLegend" style="display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 13px; margin-top: 6px; font-weight: 500;">
-        <span>${baroIcon}</span> <span>${baroText}</span>
+        <span>${baroIcon}</span> <span style="color: ${baroColor}; font-weight:600;">${baroText}</span>
       </div>
     </div>`;
   }
