@@ -168,12 +168,6 @@ input:focus{outline:none;border-color:var(--neon-blue);box-shadow:0 0 10px rgba(
   font-style: italic;
 }
 
-/* --- NOUVEAUTÉS : ANIMATION DE VAGUE & RÉORGANISATION --- */
-@keyframes waveMove {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
-}
-
 .weather-row {
   position: relative;
   grid-column: span 2;
@@ -552,6 +546,26 @@ function sunPct(t){
   return nm<=r?0:nm>=s?100:Math.round((nm-r)/(s-r)*100);
 }
 
+/* LOOK ARC-EN-CIEL PALIERS TEMPÉRATURE & BAROMÈTRE */
+function getRainbowTempColor(t) {
+  const ts = Math.round(t / 2) * 2;
+  if (ts <= 0) return '#ffffff';   // Blanc
+  if (ts <= 6) return '#38bdf8';   // Bleu
+  if (ts <= 14) return '#4ade80';  // Vert
+  if (ts <= 22) return '#eab308';  // Jaune
+  if (ts <= 28) return '#f97316';  // Orange
+  return '#f43f5e';                // Rouge
+}
+
+function getBaroColor(p) {
+  const ps = Math.round(p / 2) * 2;
+  if (ps <= 986) return '#2563eb';  // Tempête / Bleu Profond
+  if (ps <= 1000) return '#38bdf8'; // Pluie-Vent / Bleu ciel
+  if (ps <= 1014) return '#94a3b8'; // Variable / Gris-Muted
+  if (ps <= 1026) return '#fbbf24'; // Beau temps / Jaune
+  return '#ea580c';                 // Sec / Orange-Rouge
+}
+
 /* CALCUL DU LOOK DYNAMIQUE ET LIQUID GLASS DE LA CARTE SOLEIL & PLUIE */
 function getSunCardStyle(sun, rainRate) {
   if (!sun || !sun.sunrise || !sun.sunset) {
@@ -887,15 +901,7 @@ function renderLiveGrid(data,trend,nm1,fc,aq){
   // Blocs Température + Humidité fusionnés sur une même rangée ordonnable
   let tempHtml = '';
   if(!isNaN(temp)){
-    let tempColor = "#4ade80";
-    if (temp <= 0) {
-      tempColor = "#ffffff";
-    } else if (temp >= 25) {
-      tempColor = "#fbbf24";
-    } else {
-      const pctTemp = Math.min(100, Math.max(0, (temp / 25) * 100));
-      tempColor = `color-mix(in srgb, #fbbf24 ${pctTemp}%, #ffffff)`;
-    }
+    const tempColor = getRainbowTempColor(temp);
     const tempStyle = `background: linear-gradient(135deg, color-mix(in srgb, ${tempColor} 14%, transparent) 0%, rgba(15, 23, 42, 0.75) 100%); border: 1px solid color-mix(in srgb, ${tempColor} 30%, transparent); box-shadow: 0 10px 25px rgba(0,0,0,.4); background-clip: padding-box; width:100%;`;
     tempHtml = `<div class="kpi-box" style="${tempStyle}"><div class="section-title">Température</div><div class="kpi-val" style="color:${tempColor}">${temp} °C</div><div style="display:flex;flex-direction:column;align-items:center;gap:4px;margin-top:6px">${tMin!==null?`<div style="font-size:11px"><span style="color:var(--neon-blue)">↓ ${tMin}°</span> <span style="color:var(--text-muted)">${fmtHM(tMinTs)}</span></div>`:''}${tMax!==null?`<div style="font-size:11px"><span style="color:var(--neon-orange)">↑ ${tMax}°</span> <span style="color:var(--text-muted)">${fmtHM(tMaxTs)}</span></div>`:''}${fl!==null?`<div class="kpi-sub">Ressenti ${fl}°</div>`:''}</div></div>`;
   }
@@ -905,9 +911,9 @@ function renderLiveGrid(data,trend,nm1,fc,aq){
     const fillBorder = `1px solid color-mix(in srgb, var(--neon-blue) 30%, transparent)`;
     humidHtml = `
       <div class="kpi-box" style="position: relative; overflow: hidden; background: rgba(30, 41, 59, 0.3); border: ${fillBorder}; box-shadow: 0 10px 25px rgba(0,0,0,.4); background-clip: padding-box; width:100%;">
-        <div class="wave-fill" style="position: absolute; left: 0; right: 0; bottom: 0; height: ${humid}%; background: color-mix(in srgb, var(--neon-blue) 12%, transparent); pointer-events: none; z-index: 1; transition: height 0.5s ease;">
-          <svg viewBox="0 0 100 15" preserveAspectRatio="none" style="position: absolute; top: -14px; left: 0; width: 200%; height: 15px; fill: color-mix(in srgb, var(--neon-blue) 12%, transparent); animation: waveMove 4s linear infinite;">
-            <path d="M0,7 Q25,12 50,7 T100,7 L100,15 L0,15 Z"></path>
+        <div class="wave-fill" style="position: absolute; left: 0; right: 0; bottom: 0; height: ${humid}%; pointer-events: none; z-index: 1; transition: height 0.5s ease;">
+          <svg viewBox="0 0 100 100" preserveAspectRatio="none" style="position: absolute; top: -15px; left: 0; width: 100%; height: calc(100% + 15px); fill: color-mix(in srgb, var(--neon-blue) 12%, transparent);">
+            <path d="M0,15 Q25,20 50,15 T100,15 L100,100 L0,100 Z"></path>
           </svg>
         </div>
         <div style="position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; width: 100%;">
@@ -984,12 +990,13 @@ function renderLiveGrid(data,trend,nm1,fc,aq){
     let baroPct = ((pVal - 970) / (1040 - 970)) * 100;
     baroPct = Math.min(100, Math.max(0, baroPct));
     
-    let baroColor = ""; let baroText = ""; let baroIcon = "";
-    if (pVal < 990) { baroText = "Tempête"; baroIcon = "🌪️"; baroColor = "#2563eb"; }
-    else if (pVal < 1009) { baroText = "Pluie ou Vent"; baroIcon = "🌧️"; baroColor = "#38bdf8"; }
-    else if (pVal < 1022) { baroText = "Variable"; baroIcon = "⛅"; baroColor = "#94a3b8"; }
-    else if (pVal < 1032) { baroText = "Beau temps"; baroIcon = "☀️"; baroColor = "#fbbf24"; }
-    else { baroText = "Temps sec"; baroIcon = "🏜️"; baroColor = "#ea580c"; }
+    const baroColor = getBaroColor(pVal);
+    let baroText = ""; let baroIcon = "";
+    if (pVal < 990) { baroText = "Tempête"; baroIcon = "🌪️"; }
+    else if (pVal < 1009) { baroText = "Pluie ou Vent"; baroIcon = "🌧️"; }
+    else if (pVal < 1022) { baroText = "Variable"; baroIcon = "⛅"; }
+    else if (pVal < 1032) { baroText = "Beau temps"; baroIcon = "☀️"; }
+    else { baroText = "Temps sec"; baroIcon = "🏜️"; }
     
     const baroStyle = `background: linear-gradient(135deg, color-mix(in srgb, ${baroColor} 14%, transparent) 0%, rgba(15, 23, 42, 0.75) 100%); border: 1px solid color-mix(in srgb, ${baroColor} 30%, transparent); box-shadow: 0 10px 25px rgba(0,0,0,.4); background-clip: padding-box; margin-bottom:0;`;
     
